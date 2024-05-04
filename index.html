@@ -39,28 +39,51 @@
             text-align: justify;
         }
 
-        table {
-            width: 90%;
-            margin: 30px auto;
-            border-collapse: collapse;
+        .content-hidden {
+            display: none;
         }
 
-        th, td {
-            padding: 8px;
-            text-align: center;
-            border-bottom: 1px solid #ddd;
-        }
-
-        th {
-            background-color: #e8e8e8;
-        }
-
-        a {
+        .toggle-link {
             color: #2980b9;
+            cursor: pointer;
             text-decoration: none;
         }
 
-        a:hover {
+        .toggle-link:hover {
+            text-decoration: underline;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .module {
+            background-color: #fff;
+            border: 1px solid #ddd;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .module h3 {
+            margin: 0 0 10px 0;
+            color: #2980b9;
+        }
+
+        .module a {
+            color: #2980b9;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        .module p {
+            margin: 5px 0;
+        }
+
+        .module a:hover {
             color: #3498db;
         }
 
@@ -75,59 +98,67 @@
             margin: 20px auto;
             width: 150px;
         }
+
+        @media (max-width: 768px) {
+            .grid {
+                grid-template-columns: 1fr;
+            }
+        }
     </style>
+    <script>
+        function toggleContent() {
+            var content = document.getElementById("more-content");
+            var linkText = document.getElementById("toggle-link");
+
+            if (content.style.display === "none") {
+                content.style.display = "block";
+                linkText.innerHTML = "Read Less";
+            } else {
+                content.style.display = "none";
+                linkText.innerHTML = "Read More";
+            }
+        }
+    </script>
 </head>
 <body>
     <h1>Multivariate Statistics</h1>
     <p>by <a href="https://twitter.com/AntonioSabogal">Orlando Sabogal-Cardona</a></p>
-    <h2>Introduction</h2>
-    <p>Welcome to our course on Multivariate Statistics, part of the Master's program in Statistics and Operational Research at Universidad Tecnológica de Pereira, Colombia. This course aims to provide a thorough understanding of multivariate statistical methods and their real-world applications.</p>
-    <p>We will start with the multivariate approach to data analysis, covering essential topics such as the multivariate normal distribution and the variance-covariance matrix. The course will progress to Principal Components Analysis (PCA), Exploratory Factor Analysis (EFA), and Confirmatory Factor Analysis (CFA), culminating in Structural Equation Modeling (SEM).</p>
-
-    <table>
-      <tr>
-        <th>Topic</th>
-        <th>Presentations</th>
-        <th>Tutorials</th>
-      </tr>
-      <tr>
-        <td>Introductory Session</td>
-        <td><a href="https://github.com/orlando-sabogal/SpatialAnalysis_2023/blob/gh-pages/Presentations/00_Introduction.pdf"><strong>Introductory Session</strong></a></td>
-        <td>No Tutorial</td>
-      </tr>
-      <tr>
-        <td>Principal Component Analysis</td>
-        <td>No Presentation</td>
-        <td><a href="https://orlando-sabogal.github.io/SpatialAnalysis_2023/Tutorials/02_R_Spatial/SpatialAnalysWithR.nb.html"><strong>Rudiments</strong></a></td>
-      </tr>
-      <tr>
-        <td>Factor Analysis</td>
-        <td>No Presentation</td>
-        <td><a href="https://orlando-sabogal.github.io/SpatialAnalysis_2023/Tutorials/03_MapMaking/Tutorial_tmaps.nb.html"><strong>No Tutorial</strong></a></td>
-      </tr>
-      <tr>
-        <td>Exploratory Factor Analysis EFA</td>
-        <td>No Presentation</td>
-        <td><a href="https://orlando-sabogal.github.io/SpatialAnalysis_2023/Tutorials/03_MapMaking/Tutorial_leaflet.nb.html"><strong>EFA Tutorial</strong></a></td>
-      </tr>
-      <tr>
-        <td>Confirmatory Factor Analysis</td>
-        <td><a href="https://github.com/orlando-sabogal/SpatialAnalysis_2023/blob/gh-pages/Presentations/01_SpatialAutocorrelation_Part_A.pdf"><strong>CFA</strong></a></td>
-        <td><a href="https://orlando-sabogal.github.io/SpatialAnalysis_2023/Tutorials/05_MoransI/MoransI.nb.html"><strong>Tutorial: Measurment Model</strong></a></td>
-      </tr>
-      <tr>
-        <td>Analysis of Invariance</td>
-        <td><a href="https://github.com/orlando-sabogal/SpatialAnalysis_2023/blob/gh-pages/Presentations/01_SpatialAutocorrelation_Part_B.pdf"><strong>Invariance</strong></a></td>
-        <td><a href="https://orlando-sabogal.github.io/SpatialAnalysis_2023/Tutorials/05_MoransI/MoransI.nb.html"><strong>Tutorial: the same thing?</strong></a></td>
-      </tr>
-      <tr>
-        <td>Structural Equation Models</td>
-        <td><a href="https://github.com/orlando-sabogal/SpatialAnalysis_2023/blob/gh-pages/Presentations/02_LISA.pdf"><strong>SEM</strong></a></td>
-        <td><a href="https://orlando-sabogal.github.io/SpatialAnalysis_2023/Tutorials/05_MoransI/MoransI.nb.html"><strong>SEM Tutorial</strong></a></td>
-      </tr>
-
-    </table>
-
+    <p>Welcome to our course on Multivariate Statistics, offered as part of the Master's program in Statistics and Operational Research at Universidad Tecnológica de Pereira, (Pereira, Colombia). This course is designed to equip you with a comprehensive understanding of multivariate statistical methods and their applications. <span id="toggle-link" class="toggle-link" onclick="toggleContent()">Read More</span></p>
+    <div id="more-content" class="content-hidden">
+        <p>We will begin our journey by exploring the multivariate approach to data analysis. Key topics will include the multivariate normal distribution, the variance-covariance matrix, and the Mahalanobis distance. As we progress, we will delve into Principal Components Analysis (PCA), discussing both its theoretical underpinnings and practical applications. This will set the stage for our exploration of latent variable models, starting with the common factor model. Here, we will introduce concepts such as Exploratory Factor Analysis (EFA) and Confirmatory Factor Analysis (CFA), examining various estimation methods, goodness-of-fit statistics, and issues related to model specification. Our discussions will also cover marked methods, both standardized and unstandardized solutions, modification indices, interpretation of results, higher-order factors, and analysis of invariance, all integral to understanding and implementing factor analysis.</p>
+        <p>The culmination of our course will be an in-depth look at Structural Equation Modeling (SEM), a powerful statistical technique that allows for the analysis of complex relationships between observed and latent variables. Throughout the course, we will conduct practical tutorials using the R programming language, focusing on essential libraries such as 'psych' and 'lavaan'. These sessions are designed to enhance your analytical skills and provide hands-on experience.</p>
+    </div>
+    <h2>Lessons</h2>
+    <div class="grid">
+        <div class="module">
+            <h3><a href="https://github.com/orlando-sabogal/SpatialAnalysis_2023/blob/gh-pages/Presentations/00_Introduction.pdf">Introductory Session</a></h3>
+            <p>No Tutorial Available</p>
+        </div>
+        <div class="module">
+            <h3><a href="no-link-available">Principal Component Analysis (PCA)</a></h3>
+            <p><a href="https://orlando-sabogal.github.io/SpatialAnalysis_2023/Tutorials/02_R_Spatial/SpatialAnalysWithR.nb.html">Go to Tutorial: Rudiments</a></p>
+        </div>
+        <div class="module">
+            <h3><a href="no-link-available">Factor Analysis</a></h3>
+            <p>No Tutorial Available</p>
+        </div>
+        <div the="module">
+            <h3><a href="no-link-available">Exploratory Factor Analysis (EFA)</a></h3>
+            <p><a href="https://orlando-sabogal.github.io/SpatialAnalysis_2023/Tutorials/03_MapMaking/Tutorial_leaflet.nb.html">Go to Tutorial: EFA</a></p>
+        </div>
+        <div class="module">
+            <h3><a href="https://github.com/orlando-sabogal/SpatialAnalysis_2023/blob/gh-pages/Presentations/01_SpatialAutocorrelation_Part_A.pdf">Confirmatory Factor Analysis (CFA)</a></h3>
+            <p><a href="https://orlando-sabogal.github.io/SpatialAnalysis_2023/Tutorials/05_MoransI/MoransI.nb.html">Go to Tutorial: Measurement Model</a></p>
+        </div>
+        <div class="module">
+            <h3><a href="https://github.com/orlando-sabogal/SpatialAnalysis_2023/blob/gh-pages/Presentations/01_SpatialAutocorrelation_Part_B.pdf">Analysis of Invariance</a></h3>
+            <p><a href="https://orlando-sabogal.github.io/SpatialAnalysis_2023/Tutorials/05_MoransI/MoransI.nb.html">Go to Tutorial: The Same Thing?</a></p>
+        </div>
+        <div class="module">
+            <h3><a href="https://github.com/orlando-sabogal/SpatialAnalysis_2023/blob/gh-pages/Presentations/02_LISA.pdf">Structural Equation Models (SEM)</a></h3>
+            <p><a href="https://orlando-sabogal.github.io/SpatialAnalysis_2023/Tutorials/05_MoransI/MoransI.nb.html">Go to Tutorial: SEM</a></p>
+        </div>
+    </div>
     <p class="footer">All course materials are available on our <a href="https://github.com/orlando-sabogal/MultivariateStatistics_2024">GitHub repository</a>.</p>
     <img src="Logo_MIOE.jpg" alt="GIMS Logo" class="logo">
 </body>
