@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Spatial Analysis</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Optima&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Montserrat&display=swap');
+
+    body {
+      font-family: 'Optima', sans-serif;
+      margin: 55px;
+      padding: 0;
+    }
+
+    h1 {
+      text-align: center;
+      font-family: 'Montserrat', sans-serif;
+      font-weight: bold;
+      font-size: 36px; /* Adjust the font size as desired */
+      margin-top: 40px;
+    }
+
+    h2 {
+      font-family: 'Montserrat', sans-serif;
+      font-weight: bold;
+      margin-top: 30px;
+    }
+
+    p {
+      font-size: 20px;
+      margin-bottom: 20px;
+    }
+
+    table {
+      margin-left: auto;
+      margin-right: auto;
+      margin-top: 40px;
+      border-collapse: collapse;
+    }
+
+    th, td {
+      text-align: center;
+      padding: 10px 20px;
+    }
+
+    th {
+      font-size: 22px;
+      background-color: #f2f2f2;
+    }
+
+    td {
+      font-size: 18px;
+    }
+
+    a {
+      color: #0000ff;
+      text-decoration: none;
+      transition: font-size 0.2s, color 0.2s;
+    }
+
+    a:hover {
+      font-size: 24px;
+      color: #00008b;
+    }
+  </style>
+</head>
+<body>
+  <h1>Spatial Analysis</h1>
+  <p style="text-align: center; font-family: 'Optima', sans-serif;">by <a href="https://twitter.com/AntonioSabogal">Orlando Sabogal-Cardona</a></p>
+  <h2>Introduction:</h2>
+  <p>
+    Throughout this course, we will delve into a diverse array of spatial analysis techniques, equipping you with the theoretical foundation and practical skills necessary to navigate spatial data challenges. Our journey will encompass essential topics, including geo-spatial operations, spatial autocorrelation, Moran's I, Local Indicators of Spatial Association (LISA), spatial regression, and Geographically Weighted Regression (GWR).
+  </p>
+
+  <p>
+    By immersing yourself in this course, you will cultivate a deep understanding of the underlying principles that drive these spatial analysis methodologies. Furthermore, you will gain proficiency in implementing these techniques using R, enabling you to effectively manipulate, analyze, and interpret spatial datasets. Through hands-on exercises, project work, and code examples, you will hone your practical abilities and develop the confidence to apply spatial analysis in diverse domains.
+  </p>
+
+  <table>
+    <tr>
+      <th>Topic</th>
+      <th>Presentations</th>
+      <th>Tutorials</th>
+    </tr>
+    <tr>
+      <td>Introductory Session</td>
+      <td><a href="https://github.com/orlando-sabogal/SpatialAnalysis_2023/blob/gh-pages/Presentations/00_Introduction.pdf"><strong>Introductory Session</strong></a></td>
+      <td>No Tutorial</td>
+    </tr>
+    <tr>
+      <td>Geocomputation with R</td>
+      <td>No Presentation</td>
+      <td><a href="https://orlando-sabogal.github.io/SpatialAnalysis_2023/Tutorials/02_R_Spatial/SpatialAnalysWithR.nb.html"><strong>Spatial analysis with R</strong></a></td>
+    </tr>
+    <tr>
+      <td>Map making: tmap</td>
+      <td>No Presentation</td>
+      <td><a href="https://orlando-sabogal.github.io/SpatialAnalysis_2023/Tutorials/03_MapMaking/Tutorial_tmaps.nb.html"><strong>Map Making - tmap</strong></a></td>
+    </tr>
+    <tr>
+      <td>Map making: leaflet</td>
+      <td>No Presentation</td>
+      <td><a href="https://orlando-sabogal.github.io/SpatialAnalysis_2023/Tutorials/03_MapMaking/Tutorial_leaflet.nb.html"><strong>Map Making - leaflet</strong></a></td>
+    </tr>
+    <tr>
+      <td>Spatial Autocorrelation - Part A</td>
+      <td><a href="https://github.com/orlando-sabogal/SpatialAnalysis_2023/blob/gh-pages/Presentations/01_SpatialAutocorrelation_Part_A.pdf"><strong>Spatial Autocorrelation - Part A</strong></a></td>
+      <td><a href="https://orlando-sabogal.github.io/SpatialAnalysis_2023/Tutorials/05_MoransI/MoransI.nb.html"><strong>Spatial Autocorrelation</strong></a></td>
+    </tr>
+    <tr>
+      <td>Spatial Autocorrelation - Part B</td>
+      <td><a href="https://github.com/orlando-sabogal/SpatialAnalysis_2023/blob/gh-pages/Presentations/01_SpatialAutocorrelation_Part_B.pdf"><strong>Spatial Autocorrelation - Part B</strong></a></td>
+      <td><a href="https://orlando-sabogal.github.io/SpatialAnalysis_2023/Tutorials/05_MoransI/MoransI.nb.html"><strong>Spatial Autocorrelation</strong></a></td>
+    </tr>
+    <tr>
+      <td>LISA</td>
+      <td><a href="https://github.com/orlando-sabogal/SpatialAnalysis_2023/blob/gh-pages/Presentations/02_LISA.pdf"><strong>LISA</strong></a></td>
+      <td><a href="https://orlando-sabogal.github.io/SpatialAnalysis_2023/Tutorials/05_MoransI/MoransI.nb.html"><strong>Spatial Autocorrelation</strong></a></td>
+    </tr>
+    <tr>
+      <td>Case study: Mexico HTS</td>
+      <td>No Presentation</td>
+      <td><a href="https://orlando-sabogal.github.io/SpatialAnalysis_2023/Tutorials/04_MexicoCity_HTS/Data%20Wrangling.nb.html"><strong>Case study: Mexico HTS</strong></a></td>
+    </tr>
+    <tr>
+      <td>Linear Regression</td>
+      <td><a href="https://github.com/orlando-sabogal/SpatialAnalysis_2023/blob/gh-pages/Presentations/03_LinearRegression.pdf"><strong>Linear Regression</strong></a></td>
+      <td><a href="https://orlando-sabogal.github.io/SpatialAnalysis_2023/Tutorials/06_LinearRegression/LinearModel.nb.html"><strong>Linear Regression</strong></a></td>
+    </tr>
+    <tr>
+      <td>Spatial Regression</td>
+      <td><a href="https://github.com/orlando-sabogal/SpatialAnalysis_2023/blob/gh-pages/Presentations/04_SpatialRegression.pdf"><strong>Spatial Regression</strong></a></td>
+      <td><a href="https://orlando-sabogal.github.io/SpatialAnalysis_2023/Tutorials/07_SpatialRegression/SpatialRegression.nb.html"><strong>Spatial Regression</strong></a></td>
+    </tr>
+    <tr>
+      <td>GWR</td>
+      <td><a href="https://github.com/orlando-sabogal/SpatialAnalysis_2023/blob/gh-pages/Presentations/05_GWR.pdf"><strong>GWR</strong></a></td>
+      <td><a href="https://orlando-sabogal.github.io/SpatialAnalysis_2023/Tutorials/08_GWR/GWR.nb.html"><strong>GWR</strong></a></td>
+    </tr>
+    <tr>
+      <td>Spatial Panel Models</td>
+      <td><a href="https://github.com/orlando-sabogal/SpatialAnalysis_2023/blob/gh-pages/Presentations/06_SpatialPaneModels.pdf"><strong>Spatial Panel Models</strong></a></td>
+      <td>No Tutorial</td>
+    </tr>
+  </table>
+
+  <p style="text-align: center; font-size: 18px; margin-top: 40px;">All the code and material for the tutorials can be downloaded from the <a href="https://github.com/orlando-sabogal/SpatialAnalysis_2023">course GitHub repository</a>.</p>
+
+  <div style="display: flex; justify-content: center; margin-top: 20px;">
+    <a href="https://twitter.com/GIMS_Unal_Mz" style="transition: transform 0.2s;">
+      <img src="GIMS_logo.jpg" alt="GIMS Logo" style="width: 200px;">
+    </a>
+  </div>
+
+  <style>
+    a:hover {
+      transform: scale(1.2);
+    }
+  </style>
+
+
+</body>
+</html>
