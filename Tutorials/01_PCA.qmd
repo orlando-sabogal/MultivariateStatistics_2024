@@ -1,0 +1,182 @@
+---
+title: "Principal Component Analysis (PCA)"
+subtitle: "Tutorial"
+date: "`r Sys.Date()`"
+author: "Orlando Sabogal-Cardona"
+theme:
+  light: journal
+  dark: darkly
+format:
+  html:
+    toc: true
+    toc_levels: 3
+editor: visual
+---
+
+#Libraries and data
+
+```{r}
+library(tidyverse)
+library(magrittr)
+
+library(factoextra)
+library(psych)
+```
+
+
+# First example
+
+## Iris data
+
+```{r}
+names(iris)
+```
+```{r}
+MyData <- iris %>% select(-Species)
+```
+
+
+## prcomp 
+
+### prcomp (scale = FALSE)
+
+```{r}
+MyFirst_PCA <- prcomp(MyData)
+```
+
+```{r}
+MyFirst_PCA
+```
+
+```{r}
+str(MyFirst_PCA)
+```
+
+**$rotation** is the matrix of the principal component loadings (eigenvectors). Each column of **rotation** contains coefficients for one principal component. 
+
+```{r}
+MyFirst_PCA$rotation
+```
+
+The eigenvalues are a bit tricky. In **$sdev** you will find the standard deviation of each principal component. It provides a measure of the amount of variation captured by each component. Remember that the igenvalues are associated with the variance of the components. Therefore, you only need to *^2* 
+
+
+```{r}
+MyFirst_PCA$sdev
+```
+
+```{r}
+MyFirst_PCA$sdev^2
+```
+
+```{r}
+MyFirst_PCA$sdev^2/sum(MyFirst_PCA$sdev^2)
+```
+
+```{r}
+summary(MyFirst_PCA)
+```   
+
+The **"scores"** of the components:
+
+```{r}
+MyFirst_PCA$x %>% head()
+```
+
+
+### prcomp (scale = TRUE)
+
+```{r}
+MyFirst_PCA <- prcomp(MyData, scale = TRUE)
+```
+
+```{r}
+MyFirst_PCA
+```
+
+```{r}
+MyFirst_PCA$rotation
+```
+
+```{r}
+summary(MyFirst_PCA)
+```
+
+
+## princomp
+
+
+```{r}
+PCA_Results <- princomp(MyData, cor = TRUE, scores = TRUE)
+```
+
+```{r}
+PCA_Results
+```
+
+```{r}
+summary(PCA_Results)
+```
+
+```{r}
+str(PCA_Results)
+```
+```{r}
+PCA_Results$loadings
+```
+
+```{r}
+PCA_Results$scores %>% head()
+```
+
+## prcomp vs princomp
+
+
+The **prcomp()** function utilizes something calles Spectral Value Decomposition SVD. 
+The **pincomp()** function utilizes Spectra Decomposition. 
+
+
+## factorextra
+
+
+```{r}
+MyFirst_PCA <- prcomp(MyData, scale = TRUE)
+```
+
+```{r}
+fviz_eig(MyFirst_PCA)
+```
+
+
+```{r}
+fviz_pca_ind(MyFirst_PCA)
+```
+
+```{r}
+fviz_pca_var(MyFirst_PCA)
+```
+
+```{r}
+fviz_pca_biplot(MyFirst_PCA,
+                col.var = "red", 
+                col.ind = "green")
+```
+
+
+## With psych
+
+
+## By hand
+
+
+
+# Second example
+
+
+
+
+
+
+
+
+
