@@ -23,7 +23,6 @@ library(factoextra)
 library(psych)
 ```
 
-
 # First example
 
 ## Iris data
@@ -31,12 +30,106 @@ library(psych)
 ```{r}
 names(iris)
 ```
+
 ```{r}
 MyData <- iris %>% select(-Species)
 ```
 
+## By hand
 
-## prcomp 
+```{r}
+summary(MyData)
+```
+
+```{r}
+MyData_scaled <- scale(MyData)
+head(MyData_scaled)
+```
+
+```{r}
+Temp <- (MyData$Sepal.Length - mean(MyData$Sepal.Length))/sd(MyData$Sepal.Length)
+head(Temp)
+```
+
+```{r}
+# Compute the covariance matrix
+cov_matrix <- cov(MyData_scaled)
+cov_matrix
+```
+
+```{r}
+# Eigen decomposition
+eigen_results <- eigen(cov_matrix)
+```
+
+```{r}
+eigen_results$values
+```
+
+```{r}
+eigen_results$vectors
+```
+
+```{r}
+# Compute the PCA scores
+scores <- MyData_scaled %*% eigen_results$vectors
+head(scores)
+```
+
+```{r}
+# Eigenvalues and explained variance
+eigenvalues <- eigen_results$values
+var_explained <- eigenvalues / sum(eigenvalues) * 100  
+pca_df <- data.frame(PC = 1:length(eigenvalues), Variance = var_explained)
+pca_df$Cum <- cumsum(pca_df$Variance)
+```
+
+```{r}
+# Create the scree plot
+ggplot(pca_df, aes(x = PC, y = Variance)) +
+  geom_bar(stat = "identity", fill = "steelblue") +
+  geom_line(aes(group = 1), color = "red") +
+  geom_point(color = "red") + 
+  scale_y_continuous(breaks = c(10, 20, 30, 40, 50, 60, 70),
+                     labels = c("10%","20%", "30%", "40%", "50%", "60%", "70%")) +
+labs(title = "Scree Plot", 
+       x = "Principal Component", 
+       y = "Percentage of Variance Explained") +
+  theme_minimal() 
+
+```
+
+```{r}
+ggplot(data = pca_df, aes(x = PC, y = Cum)) +
+  geom_point() +
+  geom_line() +
+  scale_y_continuous(breaks = c(80, 90, 100),
+                     labels = c("80%", "90%", "100%")) +
+  labs(title = "PCA - Result", 
+       x = "Principal Component", 
+       y = "Percentage of Variance Explained") +
+  theme_minimal() 
+
+  
+```
+
+```{r}
+scores <- as.data.frame(scores)
+names(scores) <- c("PC1", "PC2", "PC3", "PC4")
+head(scores)
+```
+
+```{r}
+ggplot(data = scores) +
+  geom_point(aes(x = PC1, y = PC2)) +
+  labs(title = "PCA - Result", 
+       x = "First Principal Component", 
+       y = "Second Principal Component") +
+  theme_minimal()
+  
+```
+
+## prcomp
 
 ### prcomp (scale = FALSE)
 
@@ -52,14 +145,13 @@ MyFirst_PCA
 str(MyFirst_PCA)
 ```
 
-**$rotation** is the matrix of the principal component loadings (eigenvectors). Each column of **rotation** contains coefficients for one principal component. 
+**\$rotation** is the matrix of the principal component loadings (eigenvectors). Each column of **rotation** contains coefficients for one principal component.
 
 ```{r}
 MyFirst_PCA$rotation
 ```
 
-The eigenvalues are a bit tricky. In **$sdev** you will find the standard deviation of each principal component. It provides a measure of the amount of variation captured by each component. Remember that the igenvalues are associated with the variance of the components. Therefore, you only need to *^2* 
-
+The eigenvalues are a bit tricky. In **\$sdev** you will find the standard deviation of each principal component. It provides a measure of the amount of variation captured by each component. Remember that the igenvalues are associated with the variance of the components. Therefore, you only need to *\^2*
 
 ```{r}
 MyFirst_PCA$sdev
@@ -75,14 +167,13 @@ MyFirst_PCA$sdev^2/sum(MyFirst_PCA$sdev^2)
 
 ```{r}
 summary(MyFirst_PCA)
-```   
+```
 
 The **"scores"** of the components:
 
 ```{r}
 MyFirst_PCA$x %>% head()
 ```
-
 
 ### prcomp (scale = TRUE)
 
@@ -102,9 +193,7 @@ MyFirst_PCA$rotation
 summary(MyFirst_PCA)
 ```
 
-
 ## princomp
-
 
 ```{r}
 PCA_Results <- princomp(MyData, cor = TRUE, scores = TRUE)
@@ -121,6 +210,7 @@ summary(PCA_Results)
 ```{r}
 str(PCA_Results)
 ```
+
 ```{r}
 PCA_Results$loadings
 ```
@@ -131,13 +221,9 @@ PCA_Results$scores %>% head()
 
 ## prcomp vs princomp
 
+The **prcomp()** function utilizes something calles Spectral Value Decomposition SVD. The **pincomp()** function utilizes Spectra Decomposition.
 
-The **prcomp()** function utilizes something calles Spectral Value Decomposition SVD. 
-The **pincomp()** function utilizes Spectra Decomposition. 
-
-
-## factorextra
-
+## factoextra
 
 ```{r}
 MyFirst_PCA <- prcomp(MyData, scale = TRUE)
@@ -146,7 +232,6 @@ MyFirst_PCA <- prcomp(MyData, scale = TRUE)
 ```{r}
 fviz_eig(MyFirst_PCA)
 ```
-
 
 ```{r}
 fviz_pca_ind(MyFirst_PCA)
@@ -162,21 +247,31 @@ fviz_pca_biplot(MyFirst_PCA,
                 col.ind = "green")
 ```
 
-
 ## With psych
 
+I personally see the **"principal()** function from the psych library as a way to bridge gaps between PCA and EFA. EFA is the next big topic we will disccuss.
 
-## By hand
+But as of now, all you need to know is that the concepts of factor rotation and residual correlations are not common in PCA.
 
+```{r}
+PCA_psych <- principal(MyData, 
+                       nfactors = 4, # why?
+                       residuals = FALSE, # this is the default
+                       rotate="varimax") # also the defauls
+```
 
+```{r}
+PCA_psych
+```
+
+```{r}
+PCA_psych$values
+```
 
 # Second example
 
+```{r}
+head(decathlon2)
+```
 
-
-
-
-
-
-
-
+Your turn!
