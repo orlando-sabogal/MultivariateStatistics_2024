@@ -1,0 +1,331 @@
+---
+title: "Exploratory Factor Analysis (EFA)"
+subtitle: "Tutorial"
+date: "`r Sys.Date()`"
+author: "Orlando Sabogal-Cardona"
+theme:
+  light: journal
+  dark: darkly
+format:
+  html:
+    toc: true
+    toc_levels: 3
+editor: visual
+---
+
+# Libraries and data
+
+```{r}
+library(tidyverse)
+library(magrittr)
+
+library(psych)
+library(EFA.dimensions)
+
+library(psychTools)
+```
+
+# Toy data: bfi
+
+```{r}
+Test_Data <- bfi
+Test_Data[1:10,]
+```
+
+```{r}
+dim(Test_Data)
+```
+
+```{r}
+glimpse(Test_Data)
+```
+
+```{r}
+Test_Data <- drop_na(Test_Data)
+# Test_Data <- Test_Data[complete.cases(Test_Data),]
+dim(Test_Data)
+```
+
+## Content
+
+```{r}
+summary(Test_Data$A1)
+```
+
+```{r}
+Test_Data %>% group_by(A1) %>% summarise(Total = n())
+```
+
+```{r}
+Test_Data %>% group_by(A2) %>% summarise(Total = n())
+```
+
+## Scale and distribution
+
+```{r}
+Test_Data %>% select(-gender, -education, - age) %>% 
+  mutate(Temp_Id = seq(1, dim(Test_Data)[1])) %>% 
+  pivot_longer(cols = -Temp_Id, names_to = "Variable", values_to = "Score") %>% 
+  group_by(Variable, Score) %>% summarise(Total = n()) %>% 
+  pivot_wider(id_cols = Variable, names_from = Score, values_from = Total, values_fill = 0)
+```
+
+## Variance-covariance matrix
+
+```{r}
+cov(Test_Data %>% select(-gender, -education, - age))
+```
+
+## Correlation matrix
+
+```{r}
+cor(Test_Data %>% select(-gender, -education, - age))
+```
+
+## Visual: correlation matrix
+
+```{r}
+corrplot::corrplot(cor(Test_Data %>% select(-gender, -education, - age)), 
+                   method = "color")
+```
+
+```{r}
+corrplot::corrplot(cor(Test_Data %>% select(-gender, -education, - age)), 
+                   method = "circle")
+```
+
+```{r}
+corrplot::corrplot(cor(Test_Data %>% select(-gender, -education, - age)), 
+                   method = "circle", type = "lower")
+```
+
+```{r}
+GGally::ggcorr(Test_Data %>% select(-gender, -education, - age))
+```
+
+## One final nuance
+
+```{r}
+Test_Data %<>% mutate(Temp_Id = seq(1, dim(Test_Data)[1])) 
+
+Data_Factorial <- Test_Data %>% select(-gender, -education, - age, -Temp_Id)
+```
+
+# EFA
+
+## How many factors?
+
+```{r}
+Eigenvalues_Correlation <- eigen(cor(Data_Factorial))
+Eigenvalues_Correlation$values
+```
+
+```{r}
+EMPKC(Data_Factorial) # Empirical Kaiser Criterion (Braeken and van Assen, 2017)
+```
+
+```{r}
+SCREE_PLOT(Data_Factorial)
+```
+
+```{r}
+fa.parallel(Data_Factorial, fa = "fa") # n.iter =
+```
+
+```{r}
+RAWPAR(Data_Factorial, factormodel = "PAF", Ndatasets = 1000)
+```
+
+## Ful model
+
+```{r}
+Full <- fa(Data_Factorial, nfactors = 25, rotate = "none")
+```
+
+```{r}
+Full
+```
+
+```{r}
+sum(Full$loadings[,1]*Full$loadings[,1])
+```
+
+## Different rotations
+
+```{r}
+EFA_Varimax <- fa(Data_Factorial, nfactors = 5, rotate = "varimax")
+```
+
+```{r}
+EFA_Varimax
+```
+
+```{r}
+EFA_varimin <- fa(Data_Factorial, nfactors = 5, rotate = "varimin")
+```
+
+```{r}
+EFA_varimin
+```
+
+```{r}
+EFA_oblimin <- fa(Data_Factorial, nfactors = 5, rotate = "oblimin")
+```
+
+```{r}
+EFA_oblimin
+```
+
+```{r}
+loadings <- EFA_oblimin$loadings
+loadings
+```
+
+```{r}
+fa.diagram(EFA_oblimin)
+```
+
+```{r}
+communalities <- EFA_oblimin$communality
+communalities
+```
+
+```{r}
+uniquenesses <- EFA_oblimin$uniquenesses
+uniquenesses
+```
+
+```{r}
+communalities + uniquenesses
+```
+
+```{r}
+factor_correlations <- EFA_oblimin$Phi
+factor_correlations
+```
+
+## Esimation method
+
+```{r}
+EFA <- fa(Data_Factorial, nfactors = 5, rotate = "oblimin", fm = "pa")
+```
+
+```{r}
+EFA
+```
+
+```{r}
+EFA <- fa(Data_Factorial, nfactors = 5, rotate = "oblimin", fm = "ml")
+```
+
+```{r}
+EFA
+```
+
+
+## Factor scores
+
+```{r}
+EFA_Regression <- fa(Data_Factorial, nfactors = 5, 
+                     rotate = "oblimin", fm = "ml",
+                     scores = "regression")
+
+EFA_Bartlett <- fa(Data_Factorial, nfactors = 5, 
+                   rotate = "oblimin", fm = "ml",
+                   scores = "Bartlett")
+```
+
+```{r}
+EFA_Regression$scores %>% head()
+```
+
+```{r}
+EFA_Bartlett$scores %>% head()
+```
+
+```{r}
+EFA_RegressionScores <- EFA_Regression$scores
+EFA_RegressionScores <- as.data.frame(EFA_RegressionScores)
+
+EFA_BartlettScores <- EFA_Bartlett$scores
+EFA_BartlettScores <- as.data.frame(EFA_BartlettScores)
+```
+
+```{r}
+cor(EFA_RegressionScores)
+```
+
+```{r}
+cor(EFA_BartlettScores)
+```
+```{r}
+cor(EFA_RegressionScores$ML1, EFA_BartlettScores$ML1)
+```
+
+```{r}
+cor(EFA_RegressionScores$ML2, EFA_BartlettScores$ML2)
+```
+
+
+
+# Pre-EFA
+
+## Multivariate normality?
+
+[See this.](https://cran.r-project.org/web/packages/MVN/vignettes/MVN.html#16_Energy_test)
+
+```{r}
+library(MVN)
+```
+
+```{r}
+mvn(data = Data_Factorial, 
+    mvnTest = "mardia")
+```
+
+```{r}
+mvn(data = Data_Factorial, 
+    mvnTest = "hz")
+```
+
+```{r}
+mvn(data = Data_Factorial, 
+    mvnTest = "dh")
+```
+
+## KMO
+
+Remember: The Kaiser-Meyer-Olkin (KMO) measure is a statistic that indicates the proportion of variance among the variables that might be common variance (i.e., that might be caused by underlying factors). It is used to examine the appropriateness of factor analysis. High values (close to 1) indicate that a factor analysis may be useful with your data. Low values (close to 0) suggest that factor analysis may not be appropriate.
+
+```{r}
+KMO(Data_Factorial)
+```
+```{r}
+KMO(Data_Factorial %>% select(A1, A2, A3, A4, A5))
+```
+
+## Reliability
+
+```{r}
+Data_Factorial %>% names()
+```
+
+```{r}
+alpha(Data_Factorial %>% select(A1, A2, A3, A4, A5))
+```
+
+```{r}
+alpha(Data_Factorial %>% select(A1, A2, A3, A4, A5), 
+      check.keys = TRUE)
+```
+
+```{r}
+omega(Data_Factorial %>% select(A1, A2, A3, A4, A5))
+```
+
+
+
+```{r}
+cortest.bartlett(Data_Factorial %>% select(A1, A2, A3, A4, A5))
+```
+

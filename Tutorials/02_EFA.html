@@ -1,0 +1,2333 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.3.450">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Orlando Sabogal-Cardona">
+<meta name="dcterms.date" content="2024-05-15">
+
+<title>Exploratory Factor Analysis (EFA)</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="02_EFA_files/libs/clipboard/clipboard.min.js"></script>
+<script src="02_EFA_files/libs/quarto-html/quarto.js"></script>
+<script src="02_EFA_files/libs/quarto-html/popper.min.js"></script>
+<script src="02_EFA_files/libs/quarto-html/tippy.umd.min.js"></script>
+<script src="02_EFA_files/libs/quarto-html/anchor.min.js"></script>
+<link href="02_EFA_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="02_EFA_files/libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="02_EFA_files/libs/quarto-html/quarto-syntax-highlighting-dark.css" rel="prefetch" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<script src="02_EFA_files/libs/bootstrap/bootstrap.min.js"></script>
+<link href="02_EFA_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="02_EFA_files/libs/bootstrap/bootstrap.min.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="02_EFA_files/libs/bootstrap/bootstrap-dark.min.css" rel="prefetch" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+
+
+</head>
+
+<body>
+
+<div id="quarto-content" class="page-columns page-rows-contents page-layout-article">
+<div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+  <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+  <li><a href="#libraries-and-data" id="toc-libraries-and-data" class="nav-link active" data-scroll-target="#libraries-and-data">Libraries and data</a></li>
+  <li><a href="#toy-data-bfi" id="toc-toy-data-bfi" class="nav-link" data-scroll-target="#toy-data-bfi">Toy data: bfi</a>
+  <ul class="collapse">
+  <li><a href="#content" id="toc-content" class="nav-link" data-scroll-target="#content">Content</a></li>
+  <li><a href="#scale-and-distribution" id="toc-scale-and-distribution" class="nav-link" data-scroll-target="#scale-and-distribution">Scale and distribution</a></li>
+  <li><a href="#variance-covariance-matrix" id="toc-variance-covariance-matrix" class="nav-link" data-scroll-target="#variance-covariance-matrix">Variance-covariance matrix</a></li>
+  <li><a href="#correlation-matrix" id="toc-correlation-matrix" class="nav-link" data-scroll-target="#correlation-matrix">Correlation matrix</a></li>
+  <li><a href="#visual-correlation-matrix" id="toc-visual-correlation-matrix" class="nav-link" data-scroll-target="#visual-correlation-matrix">Visual: correlation matrix</a></li>
+  <li><a href="#one-final-nuance" id="toc-one-final-nuance" class="nav-link" data-scroll-target="#one-final-nuance">One final nuance</a></li>
+  </ul></li>
+  <li><a href="#efa" id="toc-efa" class="nav-link" data-scroll-target="#efa">EFA</a>
+  <ul class="collapse">
+  <li><a href="#how-many-factors" id="toc-how-many-factors" class="nav-link" data-scroll-target="#how-many-factors">How many factors?</a></li>
+  <li><a href="#ful-model" id="toc-ful-model" class="nav-link" data-scroll-target="#ful-model">Ful model</a></li>
+  <li><a href="#different-rotations" id="toc-different-rotations" class="nav-link" data-scroll-target="#different-rotations">Different rotations</a></li>
+  <li><a href="#esimation-method" id="toc-esimation-method" class="nav-link" data-scroll-target="#esimation-method">Esimation method</a></li>
+  <li><a href="#factor-scores" id="toc-factor-scores" class="nav-link" data-scroll-target="#factor-scores">Factor scores</a></li>
+  </ul></li>
+  <li><a href="#pre-efa" id="toc-pre-efa" class="nav-link" data-scroll-target="#pre-efa">Pre-EFA</a>
+  <ul class="collapse">
+  <li><a href="#multivariate-normality" id="toc-multivariate-normality" class="nav-link" data-scroll-target="#multivariate-normality">Multivariate normality?</a></li>
+  <li><a href="#kmo" id="toc-kmo" class="nav-link" data-scroll-target="#kmo">KMO</a></li>
+  <li><a href="#reliability" id="toc-reliability" class="nav-link" data-scroll-target="#reliability">Reliability</a></li>
+  </ul></li>
+  </ul>
+</nav>
+</div>
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Exploratory Factor Analysis (EFA)</h1>
+<p class="subtitle lead">Tutorial</p>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    <div>
+    <div class="quarto-title-meta-heading">Author</div>
+    <div class="quarto-title-meta-contents">
+             <p>Orlando Sabogal-Cardona </p>
+          </div>
+  </div>
+    
+    <div>
+    <div class="quarto-title-meta-heading">Published</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date">May 15, 2024</p>
+    </div>
+  </div>
+  
+    
+  </div>
+  
+
+</header>
+
+<section id="libraries-and-data" class="level1">
+<h1>Libraries and data</h1>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyverse)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>── Attaching core tidyverse packages ──────────────────────── tidyverse 2.0.0 ──
+✔ dplyr     1.1.3     ✔ readr     2.1.4
+✔ forcats   1.0.0     ✔ stringr   1.5.1
+✔ ggplot2   3.4.4     ✔ tibble    3.2.1
+✔ lubridate 1.9.3     ✔ tidyr     1.3.0
+✔ purrr     1.0.2     
+── Conflicts ────────────────────────────────────────── tidyverse_conflicts() ──
+✖ dplyr::filter() masks stats::filter()
+✖ dplyr::lag()    masks stats::lag()
+ℹ Use the conflicted package (&lt;http://conflicted.r-lib.org/&gt;) to force all conflicts to become errors</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(magrittr)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>
+Attaching package: 'magrittr'
+
+The following object is masked from 'package:purrr':
+
+    set_names
+
+The following object is masked from 'package:tidyr':
+
+    extract</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(psych)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning: package 'psych' was built under R version 4.3.3</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>
+Attaching package: 'psych'
+
+The following objects are masked from 'package:ggplot2':
+
+    %+%, alpha</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(EFA.dimensions)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning: package 'EFA.dimensions' was built under R version 4.3.3</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>**************************************************************************************************
+EFA.dimensions 0.1.8.1
+
+Please contact Brian O'Connor at brian.oconnor@ubc.ca if you have questions or suggestions.
+**************************************************************************************************</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(psychTools)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning: package 'psychTools' was built under R version 4.3.3</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>
+Attaching package: 'psychTools'
+
+The following object is masked from 'package:dplyr':
+
+    recode</code></pre>
+</div>
+</div>
+</section>
+<section id="toy-data-bfi" class="level1">
+<h1>Toy data: bfi</h1>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>Test_Data <span class="ot">&lt;-</span> bfi</span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>Test_Data[<span class="dv">1</span><span class="sc">:</span><span class="dv">10</span>,]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>      A1 A2 A3 A4 A5 C1 C2 C3 C4 C5 E1 E2 E3 E4 E5 N1 N2 N3 N4 N5 O1 O2 O3 O4
+61617  2  4  3  4  4  2  3  3  4  4  3  3  3  4  4  3  4  2  2  3  3  6  3  4
+61618  2  4  5  2  5  5  4  4  3  4  1  1  6  4  3  3  3  3  5  5  4  2  4  3
+61620  5  4  5  4  4  4  5  4  2  5  2  4  4  4  5  4  5  4  2  3  4  2  5  5
+61621  4  4  6  5  5  4  4  3  5  5  5  3  4  4  4  2  5  2  4  1  3  3  4  3
+61622  2  3  3  4  5  4  4  5  3  2  2  2  5  4  5  2  3  4  4  3  3  3  4  3
+61623  6  6  5  6  5  6  6  6  1  3  2  1  6  5  6  3  5  2  2  3  4  3  5  6
+61624  2  5  5  3  5  5  4  4  2  3  4  3  4  5  5  1  2  2  1  1  5  2  5  6
+61629  4  3  1  5  1  3  2  4  2  4  3  6  4  2  1  6  3  2  6  4  3  2  4  5
+61630  4  3  6  3  3  6  6  3  4  5  5  3 NA  4  3  5  5  2  3  3  6  6  6  6
+61633  2  5  6  6  5  6  5  6  2  1  2  2  4  5  5  5  5  5  2  4  5  1  5  5
+      O5 gender education age
+61617  3      1        NA  16
+61618  3      2        NA  18
+61620  2      2        NA  17
+61621  5      2        NA  17
+61622  3      1        NA  17
+61623  1      2         3  21
+61624  1      1        NA  18
+61629  3      1         2  19
+61630  1      1         1  19
+61633  2      2        NA  17</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="fu">dim</span>(Test_Data)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 2800   28</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="fu">glimpse</span>(Test_Data)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Rows: 2,800
+Columns: 28
+$ A1        &lt;int&gt; 2, 2, 5, 4, 2, 6, 2, 4, 4, 2, 4, 2, 5, 5, 4, 4, 4, 5, 4, 4, …
+$ A2        &lt;int&gt; 4, 4, 4, 4, 3, 6, 5, 3, 3, 5, 4, 5, 5, 5, 5, 3, 6, 5, 4, 4, …
+$ A3        &lt;int&gt; 3, 5, 5, 6, 3, 5, 5, 1, 6, 6, 5, 5, 5, 5, 2, 6, 6, 5, 5, 6, …
+$ A4        &lt;int&gt; 4, 2, 4, 5, 4, 6, 3, 5, 3, 6, 6, 5, 6, 6, 2, 6, 2, 4, 4, 5, …
+$ A5        &lt;int&gt; 4, 5, 4, 5, 5, 5, 5, 1, 3, 5, 5, 5, 4, 6, 1, 3, 5, 5, 3, 5, …
+$ C1        &lt;int&gt; 2, 5, 4, 4, 4, 6, 5, 3, 6, 6, 4, 5, 5, 4, 5, 5, 4, 5, 5, 1, …
+$ C2        &lt;int&gt; 3, 4, 5, 4, 4, 6, 4, 2, 6, 5, 3, 4, 4, 4, 5, 5, 4, 5, 4, 1, …
+$ C3        &lt;int&gt; 3, 4, 4, 3, 5, 6, 4, 4, 3, 6, 5, 5, 3, 4, 5, 5, 4, 5, 5, 1, …
+$ C4        &lt;int&gt; 4, 3, 2, 5, 3, 1, 2, 2, 4, 2, 3, 4, 2, 2, 2, 3, 4, 4, 4, 5, …
+$ C5        &lt;int&gt; 4, 4, 5, 5, 2, 3, 3, 4, 5, 1, 2, 5, 2, 1, 2, 5, 4, 3, 6, 6, …
+$ E1        &lt;int&gt; 3, 1, 2, 5, 2, 2, 4, 3, 5, 2, 1, 3, 3, 2, 3, 1, 1, 2, 1, 1, …
+$ E2        &lt;int&gt; 3, 1, 4, 3, 2, 1, 3, 6, 3, 2, 3, 3, 3, 2, 4, 1, 2, 2, 2, 1, …
+$ E3        &lt;int&gt; 3, 6, 4, 4, 5, 6, 4, 4, NA, 4, 2, 4, 3, 4, 3, 6, 5, 4, 4, 4,…
+$ E4        &lt;int&gt; 4, 4, 4, 4, 4, 5, 5, 2, 4, 5, 5, 5, 2, 6, 6, 6, 5, 6, 5, 5, …
+$ E5        &lt;int&gt; 4, 3, 5, 4, 5, 6, 5, 1, 3, 5, 4, 4, 4, 5, 5, 4, 5, 6, 5, 6, …
+$ N1        &lt;int&gt; 3, 3, 4, 2, 2, 3, 1, 6, 5, 5, 3, 4, 1, 1, 2, 4, 4, 6, 5, 5, …
+$ N2        &lt;int&gt; 4, 3, 5, 5, 3, 5, 2, 3, 5, 5, 3, 5, 2, 1, 4, 5, 4, 5, 6, 5, …
+$ N3        &lt;int&gt; 2, 3, 4, 2, 4, 2, 2, 2, 2, 5, 4, 3, 2, 1, 2, 4, 4, 5, 5, 5, …
+$ N4        &lt;int&gt; 2, 5, 2, 4, 4, 2, 1, 6, 3, 2, 2, 2, 2, 2, 2, 5, 4, 4, 5, 1, …
+$ N5        &lt;int&gt; 3, 5, 3, 1, 3, 3, 1, 4, 3, 4, 3, NA, 2, 1, 3, 5, 5, 4, 2, 1,…
+$ O1        &lt;int&gt; 3, 4, 4, 3, 3, 4, 5, 3, 6, 5, 5, 4, 4, 5, 5, 6, 5, 5, 4, 4, …
+$ O2        &lt;int&gt; 6, 2, 2, 3, 3, 3, 2, 2, 6, 1, 3, 6, 2, 3, 2, 6, 1, 1, 2, 1, …
+$ O3        &lt;int&gt; 3, 4, 5, 4, 4, 5, 5, 4, 6, 5, 5, 4, 4, 4, 5, 6, 5, 4, 2, 5, …
+$ O4        &lt;int&gt; 4, 3, 5, 3, 3, 6, 6, 5, 6, 5, 6, 5, 5, 4, 5, 3, 6, 5, 4, 3, …
+$ O5        &lt;int&gt; 3, 3, 2, 5, 3, 1, 1, 3, 1, 2, 3, 4, 2, 4, 5, 2, 3, 4, 2, 2, …
+$ gender    &lt;int&gt; 1, 2, 2, 2, 1, 2, 1, 1, 1, 2, 1, 1, 2, 1, 1, 1, 2, 1, 2, 2, …
+$ education &lt;int&gt; NA, NA, NA, NA, NA, 3, NA, 2, 1, NA, 1, NA, NA, NA, 1, NA, N…
+$ age       &lt;int&gt; 16, 18, 17, 17, 17, 21, 18, 19, 19, 17, 21, 16, 16, 16, 17, …</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb20"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>Test_Data <span class="ot">&lt;-</span> <span class="fu">drop_na</span>(Test_Data)</span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Test_Data &lt;- Test_Data[complete.cases(Test_Data),]</span></span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a><span class="fu">dim</span>(Test_Data)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 2236   28</code></pre>
+</div>
+</div>
+<section id="content" class="level2">
+<h2 class="anchored" data-anchor-id="content">Content</h2>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb22"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(Test_Data<span class="sc">$</span>A1)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+  1.000   1.000   2.000   2.365   3.000   6.000 </code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb24"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a>Test_Data <span class="sc">%&gt;%</span> <span class="fu">group_by</span>(A1) <span class="sc">%&gt;%</span> <span class="fu">summarise</span>(<span class="at">Total =</span> <span class="fu">n</span>())</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 6 × 2
+     A1 Total
+  &lt;int&gt; &lt;int&gt;
+1     1   767
+2     2   666
+3     3   315
+4     4   260
+5     5   163
+6     6    65</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb26"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a>Test_Data <span class="sc">%&gt;%</span> <span class="fu">group_by</span>(A2) <span class="sc">%&gt;%</span> <span class="fu">summarise</span>(<span class="at">Total =</span> <span class="fu">n</span>())</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 6 × 2
+     A2 Total
+  &lt;int&gt; &lt;int&gt;
+1     1    34
+2     2    99
+3     3   115
+4     4   433
+5     5   830
+6     6   725</code></pre>
+</div>
+</div>
+</section>
+<section id="scale-and-distribution" class="level2">
+<h2 class="anchored" data-anchor-id="scale-and-distribution">Scale and distribution</h2>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb28"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a>Test_Data <span class="sc">%&gt;%</span> <span class="fu">select</span>(<span class="sc">-</span>gender, <span class="sc">-</span>education, <span class="sc">-</span> age) <span class="sc">%&gt;%</span> </span>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">Temp_Id =</span> <span class="fu">seq</span>(<span class="dv">1</span>, <span class="fu">dim</span>(Test_Data)[<span class="dv">1</span>])) <span class="sc">%&gt;%</span> </span>
+<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pivot_longer</span>(<span class="at">cols =</span> <span class="sc">-</span>Temp_Id, <span class="at">names_to =</span> <span class="st">"Variable"</span>, <span class="at">values_to =</span> <span class="st">"Score"</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb28-4"><a href="#cb28-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(Variable, Score) <span class="sc">%&gt;%</span> <span class="fu">summarise</span>(<span class="at">Total =</span> <span class="fu">n</span>()) <span class="sc">%&gt;%</span> </span>
+<span id="cb28-5"><a href="#cb28-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pivot_wider</span>(<span class="at">id_cols =</span> Variable, <span class="at">names_from =</span> Score, <span class="at">values_from =</span> Total, <span class="at">values_fill =</span> <span class="dv">0</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>`summarise()` has grouped output by 'Variable'. You can override using the
+`.groups` argument.</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 25 × 7
+# Groups:   Variable [25]
+   Variable   `1`   `2`   `3`   `4`   `5`   `6`
+   &lt;chr&gt;    &lt;int&gt; &lt;int&gt; &lt;int&gt; &lt;int&gt; &lt;int&gt; &lt;int&gt;
+ 1 A1         767   666   315   260   163    65
+ 2 A2          34    99   115   433   830   725
+ 3 A3          71   133   154   456   804   618
+ 4 A4          96   159   141   356   545   939
+ 5 A5          48   145   193   490   785   575
+ 6 C1          49   121   207   505   838   516
+ 7 C2          67   189   228   504   792   456
+ 8 C3          66   195   227   610   739   399
+ 9 C4         650   650   368   348   174    46
+10 C5         420   473   266   485   377   215
+# ℹ 15 more rows</code></pre>
+</div>
+</div>
+</section>
+<section id="variance-covariance-matrix" class="level2">
+<h2 class="anchored" data-anchor-id="variance-covariance-matrix">Variance-covariance matrix</h2>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb31"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cov</span>(Test_Data <span class="sc">%&gt;%</span> <span class="fu">select</span>(<span class="sc">-</span>gender, <span class="sc">-</span>education, <span class="sc">-</span> age))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>             A1          A2          A3           A4           A5          C1
+A1  1.937575288 -0.54784891 -0.47207882 -0.289210119 -0.325245225  0.03378076
+A2 -0.547848907  1.33845333  0.72324441  0.573191982  0.555268476  0.12903075
+A3 -0.472078816  0.72324441  1.66248194  0.703525391  0.814292060  0.15854014
+A4 -0.289210119  0.57319198  0.70352539  2.096532238  0.572968668  0.14544509
+A5 -0.325245225  0.55526848  0.81429206  0.572968668  1.577116375  0.18869986
+C1  0.033780761  0.12903075  0.15854014  0.145445086  0.188699860  1.48014151
+C2  0.024720358  0.19052859  0.24499506  0.414161594  0.179990635  0.68094792
+C3 -0.016916193  0.27641842  0.22043958  0.246005771  0.211476230  0.49960980
+C4  0.189605920 -0.21931461 -0.20526107 -0.317001837 -0.200970893 -0.57992820
+C5  0.054749613 -0.20906440 -0.30796465 -0.564203415 -0.333342138 -0.49679517
+E1  0.268834968 -0.44263206 -0.45199601 -0.323503540 -0.498085828 -0.05649030
+E2  0.187016004 -0.44923281 -0.59889324 -0.469856287 -0.663323368 -0.19883981
+E3 -0.082791258  0.38597327  0.66449957  0.387700152  0.694018161  0.21900005
+E4 -0.138642230  0.50907481  0.74184946  0.689566300  0.888443329  0.25562146
+E5 -0.033109620  0.45740596  0.44877998  0.306227564  0.445398262  0.42223610
+N1  0.346265703 -0.14407779 -0.13825683 -0.213128269 -0.377217226 -0.11239270
+N2  0.281965238 -0.06837113 -0.16526355 -0.322601482 -0.364778908 -0.05135009
+N3  0.196317329 -0.03773197 -0.05878586 -0.154273571 -0.259833595 -0.02280839
+N4  0.096093616 -0.15568629 -0.26696442 -0.361442813 -0.413113862 -0.17107331
+N5  0.017940114  0.04530041 -0.08441628 -0.005726109 -0.155887191 -0.09844961
+O1  0.003932198  0.13995410  0.20361083  0.068935819  0.205550019  0.24131419
+O2  0.142703493  0.05802448  0.06144421  0.114066746  0.002933490 -0.24966963
+O3 -0.103631045  0.20232438  0.33083286  0.071804477  0.332540931  0.27232714
+O4 -0.146584065  0.07326762  0.03668584 -0.106958335  0.005305095  0.11682014
+O5  0.200912063 -0.12218887 -0.06379201  0.067541511 -0.071365854 -0.21209094
+             C2            C3         C4          C5          E1         E2
+A1  0.024720358 -0.0169161934  0.1896059  0.05474961  0.26883497  0.1870160
+A2  0.190528589  0.2764184206 -0.2193146 -0.20906440 -0.44263206 -0.4492328
+A3  0.244995057  0.2204395833 -0.2052611 -0.30796465 -0.45199601 -0.5988932
+A4  0.414161594  0.2460057709 -0.3170018 -0.56420342 -0.32350354 -0.4698563
+A5  0.179990635  0.2114762299 -0.2009709 -0.33334214 -0.49808583 -0.6633234
+C1  0.680947922  0.4996098018 -0.5799282 -0.49679517 -0.05649030 -0.1988398
+C2  1.719533323  0.6001612819 -0.6851465 -0.63895479  0.04978929 -0.1439441
+C3  0.600161282  1.6567640361 -0.6217655 -0.73931757 -0.03984024 -0.1791970
+C4 -0.685146454 -0.6217654569  1.8572699  1.07516298  0.21881916  0.4578334
+C5 -0.638954789 -0.7393175733  1.0751630  2.65556403  0.17600221  0.6777609
+E1  0.049789293 -0.0398402388  0.2188192  0.17600221  2.61831410  1.2099515
+E2 -0.143944124 -0.1791970321  0.4578334  0.67776090  1.20995146  2.5781455
+E3  0.272113834  0.1780296391 -0.1570558 -0.37029891 -0.72319058 -0.8629380
+E4  0.231176838  0.1933106018 -0.2323764 -0.49034369 -0.98018513 -1.2262703
+E5  0.430206545  0.3717080277 -0.4258779 -0.52305291 -0.65840487 -0.8324125
+N1 -0.033450393 -0.1605395541  0.4486279  0.52364661  0.02271394  0.4205126
+N2 -0.002533687 -0.1251307664  0.3176862  0.59179943  0.01746167  0.4811536
+N3  0.018292493 -0.1509470811  0.4293525  0.60519784  0.12863655  0.4855427
+N4 -0.075729671 -0.2597655609  0.5940266  0.89212360  0.58967395  0.8829934
+N5  0.105111597 -0.0740268056  0.4691703  0.48515626  0.11711229  0.6657576
+O1  0.227769107  0.1305755324 -0.1499522 -0.15978017 -0.18440008 -0.2870880
+O2 -0.102994121 -0.0646916634  0.4358486  0.29864871  0.13908906  0.1907083
+O3  0.279080173  0.0878166108 -0.1136313 -0.12742553 -0.41349245 -0.4675143
+O4  0.048114042 -0.0002433236  0.1150352  0.26828749  0.15770571  0.3266483
+O5 -0.098605692  0.0077359299  0.3315836  0.10605668  0.19729703  0.1694049
+            E3          E4          E5          N1           N2          N3
+A1 -0.08279126 -0.13864223 -0.03310962  0.34626570  0.281965238  0.19631733
+A2  0.38597327  0.50907481  0.45740596 -0.14407779 -0.068371133 -0.03773197
+A3  0.66449957  0.74184946  0.44877998 -0.13825683 -0.165263554 -0.05878586
+A4  0.38770015  0.68956630  0.30622756 -0.21312827 -0.322601482 -0.15427357
+A5  0.69401816  0.88844333  0.44539826 -0.37721723 -0.364778908 -0.25983360
+C1  0.21900005  0.25562146  0.42223610 -0.11239270 -0.051350086 -0.02280839
+C2  0.27211383  0.23117684  0.43020654 -0.03345039 -0.002533687  0.01829249
+C3  0.17802964  0.19331060  0.37170803 -0.16053955 -0.125130766 -0.15094708
+C4 -0.15705578 -0.23237645 -0.42587795  0.44862790  0.317686185  0.42935251
+C5 -0.37029891 -0.49034369 -0.52305291  0.52364661  0.591799434  0.60519784
+E1 -0.72319058 -0.98018513 -0.65840487  0.02271394  0.017461671  0.12863655
+E2 -0.86293797 -1.22627035 -0.83241247  0.42051262  0.481153626  0.48554266
+E3  1.80214029  0.84497765  0.71444774 -0.09037271 -0.116190225 -0.02611567
+E4  0.84497765  2.12897332  0.64379585 -0.33051930 -0.338576397 -0.29182185
+E5  0.71444774  0.64379585  1.76921076  0.08179595  0.092794340 -0.12611206
+N1 -0.09037271 -0.33051930  0.08179595  2.44751914  1.708530734  1.41329155
+N2 -0.11619022 -0.33857640  0.09279434  1.70853073  2.355499794  1.34199293
+N3 -0.02611567 -0.29182185 -0.12611206  1.41329155  1.341992932  2.54847222
+N4 -0.31581964 -0.70641006 -0.43673066  0.99549851  0.929579426  1.29313691
+N5 -0.18834328 -0.22322920 -0.30255450  0.97458169  0.878733196  1.11644155
+O1  0.48945224  0.20350838  0.43893658 -0.09153510 -0.079288679 -0.08311902
+O2 -0.15175029  0.11602794 -0.17900213  0.33882832  0.290180612  0.27382790
+O3  0.65475341  0.36638292  0.47109932 -0.05994805 -0.043196344 -0.04942031
+O4  0.06180820 -0.17719962 -0.03062276  0.16750109  0.240420534  0.32082058
+O5 -0.23043226  0.08616017 -0.20185214  0.21580843  0.037838422  0.11581964
+            N4           N5           O1          O2          O3            O4
+A1  0.09609362  0.017940114  0.003932198  0.14270349 -0.10363104 -0.1465840647
+A2 -0.15568629  0.045300413  0.139954097  0.05802448  0.20232438  0.0732676200
+A3 -0.26696442 -0.084416283  0.203610834  0.06144421  0.33083286  0.0366858364
+A4 -0.36144281 -0.005726109  0.068935819  0.11406675  0.07180448 -0.1069583348
+A5 -0.41311386 -0.155887191  0.205550019  0.00293349  0.33254093  0.0053050950
+C1 -0.17107331 -0.098449612  0.241314188 -0.24966963  0.27232714  0.1168201446
+C2 -0.07572967  0.105111597  0.227769107 -0.10299412  0.27908017  0.0481140419
+C3 -0.25976556 -0.074026806  0.130575532 -0.06469166  0.08781661 -0.0002433236
+C4  0.59402657  0.469170339 -0.149952176  0.43584861 -0.11363132  0.1150352379
+C5  0.89212360  0.485156259 -0.159780168  0.29864871 -0.12742553  0.2682874900
+E1  0.58967395  0.117112293 -0.184400075  0.13908906 -0.41349245  0.1577057145
+E2  0.88299336  0.665757605 -0.287088041  0.19070828 -0.46751430  0.3266483374
+E3 -0.31581964 -0.188343278  0.489452242 -0.15175029  0.65475341  0.0618081986
+E4 -0.70641006 -0.223229200  0.203508382  0.11602794  0.36638292 -0.1771996174
+E5 -0.43673066 -0.302554498  0.438936580 -0.17900213  0.47109932 -0.0306227564
+N1  0.99549851  0.974581687 -0.091535100  0.33882832 -0.05994805  0.1675010906
+N2  0.92957943  0.878733196 -0.079288679  0.29018061 -0.04319634  0.2404205336
+N3  1.29313691  1.116441552 -0.083119024  0.27382790 -0.04942031  0.3208205769
+N4  2.43547082  1.004813645 -0.100693552  0.20261413 -0.11021839  0.4247589776
+N5  1.00481365  2.630818656 -0.268050770  0.49205456 -0.16166373  0.2028854658
+O1 -0.10069355 -0.268050770  1.254497085 -0.40448248  0.52291684  0.2274275332
+O2  0.20261413  0.492054564 -0.404482477  2.38969937 -0.53794688 -0.1481232466
+O3 -0.11021839 -0.161663725  0.522916842 -0.53794688  1.42387213  0.2425183993
+O4  0.42475898  0.202885466  0.227427533 -0.14812325  0.24251840  1.3816474769
+O5  0.06958895  0.307254885 -0.375993004  0.68027638 -0.51172235 -0.2868849375
+            O5
+A1  0.20091206
+A2 -0.12218887
+A3 -0.06379201
+A4  0.06754151
+A5 -0.07136585
+C1 -0.21209094
+C2 -0.09860569
+C3  0.00773593
+C4  0.33158364
+C5  0.10605668
+E1  0.19729703
+E2  0.16940486
+E3 -0.23043226
+E4  0.08616017
+E5 -0.20185214
+N1  0.21580843
+N2  0.03783842
+N3  0.11581964
+N4  0.06958895
+N5  0.30725489
+O1 -0.37599300
+O2  0.68027638
+O3 -0.51172235
+O4 -0.28688494
+O5  1.76757393</code></pre>
+</div>
+</div>
+</section>
+<section id="correlation-matrix" class="level2">
+<h2 class="anchored" data-anchor-id="correlation-matrix">Correlation matrix</h2>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb33"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cor</span>(Test_Data <span class="sc">%&gt;%</span> <span class="fu">select</span>(<span class="sc">-</span>gender, <span class="sc">-</span>education, <span class="sc">-</span> age))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>             A1          A2          A3           A4           A5          C1
+A1  1.000000000 -0.34019654 -0.26303089 -0.143493893 -0.186058607  0.01994750
+A2 -0.340196538  1.00000000  0.48484732  0.342174560  0.382181386  0.09167269
+A3 -0.263030888  0.48484732  1.00000000  0.376834395  0.502886366  0.10106695
+A4 -0.143493893  0.34217456  0.37683439  1.000000000  0.315099875  0.08256513
+A5 -0.186058607  0.38218139  0.50288637  0.315099875  1.000000000  0.12350601
+C1  0.019947502  0.09167269  0.10106695  0.082565128  0.123506009  1.00000000
+C2  0.013543165  0.12558947  0.14490173  0.218129173  0.109298132  0.42683201
+C3 -0.009441544  0.18562439  0.13282529  0.131997040  0.130827596  0.31904284
+C4  0.099950527 -0.13910042 -0.11681285 -0.160647324 -0.117425869 -0.34977205
+C5  0.024136449 -0.11089197 -0.14656963 -0.239114851 -0.162884574 -0.25058055
+E1  0.119356367 -0.23644513 -0.21664330 -0.138075744 -0.245110232 -0.02869534
+E2  0.083675009 -0.24183332 -0.28927921 -0.202097322 -0.328957442 -0.10178833
+E3 -0.044305831  0.24851999  0.38390338  0.199457743  0.411665685  0.13409059
+E4 -0.068262334  0.30157468  0.39432309  0.326392482  0.484855974  0.14399936
+E5 -0.017882783  0.29724217  0.26167680  0.159002415  0.266640959  0.26092395
+N1  0.159007327 -0.07960354 -0.06854016 -0.094086484 -0.191997953 -0.05905048
+N2  0.131985050 -0.03850611 -0.08351358 -0.145169055 -0.189258901 -0.02750097
+N3  0.088346509 -0.02042998 -0.02855976 -0.066742244 -0.129605514 -0.01174365
+N4  0.044235789 -0.08622978 -0.13267327 -0.159954829 -0.210788266 -0.09010298
+N5  0.007946034  0.02414099 -0.04036475 -0.002438167 -0.076530245 -0.04989039
+O1  0.002522152  0.10800632  0.14098977  0.042506891  0.146133849  0.17709097
+O2  0.066318345  0.03244427  0.03082697  0.050960848  0.001511058 -0.13275243
+O3 -0.062391451  0.14655853  0.21502783  0.041559016  0.221910444  0.18758747
+O4 -0.089589857  0.05387805  0.02420591 -0.062844205  0.003593873  0.08168974
+O5  0.108564523 -0.07944037 -0.03721337  0.035085786 -0.042743473 -0.13112385
+             C2            C3          C4          C5           E1          E2
+A1  0.013543165 -0.0094415440  0.09995053  0.02413645  0.119356367  0.08367501
+A2  0.125589472  0.1856243880 -0.13910042 -0.11089197 -0.236445131 -0.24183332
+A3  0.144901725  0.1328252934 -0.11681285 -0.14656963 -0.216643301 -0.28927921
+A4  0.218129173  0.1319970403 -0.16064732 -0.23911485 -0.138075744 -0.20209732
+A5  0.109298132  0.1308275955 -0.11742587 -0.16288457 -0.245110232 -0.32895744
+C1  0.426832009  0.3190428391 -0.34977205 -0.25058055 -0.028695339 -0.10178833
+C2  1.000000000  0.3555759237 -0.38338985 -0.29901050  0.023464958 -0.06836518
+C3  0.355575924  1.0000000000 -0.35445308 -0.35247012 -0.019128492 -0.08670552
+C4 -0.383389846 -0.3544530778  1.00000000  0.48412600  0.099228623  0.20922628
+C5 -0.299010503 -0.3524701242  0.48412600  1.00000000  0.066746555  0.25902663
+E1  0.023464958 -0.0191284919  0.09922862  0.06674656  1.000000000  0.46569692
+E2 -0.068365175 -0.0867055249  0.20922628  0.25902663  0.465696916  1.00000000
+E3  0.154579189  0.1030309453 -0.08584641 -0.16926990 -0.332925906 -0.40034238
+E4  0.120824195  0.1029295879 -0.11686097 -0.20622300 -0.415156775 -0.52341650
+E5  0.246650460  0.2171109988 -0.23494048 -0.24131118 -0.305909086 -0.38975804
+N1 -0.016305453 -0.0797239255  0.21041937  0.20539831  0.008972605  0.16740263
+N2 -0.001258943 -0.0633420683  0.15188654  0.23662173  0.007031264  0.19524886
+N3  0.008738314 -0.0734605944  0.19734973  0.23263713  0.049798189  0.18942344
+N4 -0.037005758 -0.1293182379  0.27930383  0.35079644  0.233512217  0.35238082
+N5  0.049419674 -0.0354579174  0.21224994  0.18355144  0.044621704  0.25563303
+O1  0.155079607  0.0905725610 -0.09823821 -0.08754063 -0.101745543 -0.15963443
+O2 -0.050808398 -0.0325121997  0.20688382  0.11855248  0.055604566  0.07683237
+O3  0.178356192  0.0571756155 -0.06987552 -0.06553036 -0.214151550 -0.24400891
+O4  0.031215329 -0.0001608256  0.07181163  0.14006300  0.082915922  0.17307252
+O5 -0.056559804  0.0045205721  0.18300662  0.04895204  0.091710883  0.07935666
+            E3          E4          E5           N1           N2           N3
+A1 -0.04430583 -0.06826233 -0.01788278  0.159007327  0.131985050  0.088346509
+A2  0.24851999  0.30157468  0.29724217 -0.079603539 -0.038506108 -0.020429977
+A3  0.38390338  0.39432309  0.26167680 -0.068540157 -0.083513577 -0.028559755
+A4  0.19945774  0.32639248  0.15900242 -0.094086484 -0.145169055 -0.066742244
+A5  0.41166568  0.48485597  0.26664096 -0.191997953 -0.189258901 -0.129605514
+C1  0.13409059  0.14399936  0.26092395 -0.059050478 -0.027500970 -0.011743647
+C2  0.15457919  0.12082420  0.24665046 -0.016305453 -0.001258943  0.008738314
+C3  0.10303095  0.10292959  0.21711100 -0.079723926 -0.063342068 -0.073460594
+C4 -0.08584641 -0.11686097 -0.23494048  0.210419374  0.151886538  0.197349734
+C5 -0.16926990 -0.20622300 -0.24131118  0.205398308  0.236621728  0.232637129
+E1 -0.33292591 -0.41515678 -0.30590909  0.008972605  0.007031264  0.049798189
+E2 -0.40034238 -0.52341650 -0.38975804  0.167402629  0.195248864  0.189423443
+E3  1.00000000  0.43138577  0.40011643 -0.043030853 -0.056394111 -0.012186160
+E4  0.43138577  1.00000000  0.33172124 -0.144793368 -0.151192425 -0.125283171
+E5  0.40011643  0.33172124  1.00000000  0.039307822  0.045455890 -0.059391856
+N1 -0.04303085 -0.14479337  0.03930782  1.000000000  0.711570954  0.565885756
+N2 -0.05639411 -0.15119243  0.04545589  0.711570954  1.000000000  0.547732790
+N3 -0.01218616 -0.12528317 -0.05939186  0.565885756  0.547732790  1.000000000
+N4 -0.15074863 -0.31022750 -0.21039355  0.407742613  0.388108811  0.519054657
+N5 -0.08649886 -0.09432362 -0.14023886  0.384069431  0.352996209  0.431172033
+O1  0.32552264  0.12452667  0.29463013 -0.052238390 -0.046124834 -0.046486372
+O2 -0.07312462  0.05144058 -0.08705561  0.140102223  0.122308101  0.110959915
+O3  0.40874079  0.21043337  0.29681592 -0.032112679 -0.023586851 -0.025943584
+O4  0.03916996 -0.10331873 -0.01958646  0.091086909  0.133269693  0.170971467
+O5 -0.12911009  0.04441530 -0.11414444  0.103756799  0.018543969  0.054569937
+            N4           N5           O1           O2          O3            O4
+A1  0.04423579  0.007946034  0.002522152  0.066318345 -0.06239145 -0.0895898569
+A2 -0.08622978  0.024140990  0.108006320  0.032444268  0.14655853  0.0538780468
+A3 -0.13267327 -0.040364753  0.140989765  0.030826973  0.21502783  0.0242059055
+A4 -0.15995483 -0.002438167  0.042506891  0.050960848  0.04155902 -0.0628442050
+A5 -0.21078827 -0.076530245  0.146133849  0.001511058  0.22191044  0.0035938725
+C1 -0.09010298 -0.049890394  0.177090967 -0.132752426  0.18758747  0.0816897366
+C2 -0.03700576  0.049419674  0.155079607 -0.050808398  0.17835619  0.0312153292
+C3 -0.12931824 -0.035457917  0.090572561 -0.032512200  0.05717562 -0.0001608256
+C4  0.27930383  0.212249943 -0.098238208  0.206883818 -0.06987552  0.0718116262
+C5  0.35079644  0.183551439 -0.087540628  0.118552475 -0.06553036  0.1400629954
+E1  0.23351222  0.044621704 -0.101745543  0.055604566 -0.21415155  0.0829159219
+E2  0.35238082  0.255633030 -0.159634428  0.076832365 -0.24400891  0.1730725196
+E3 -0.15074863 -0.086498858  0.325522638 -0.073124615  0.40874079  0.0391699633
+E4 -0.31022750 -0.094323615  0.124526667  0.051440579  0.21043337 -0.1033187270
+E5 -0.21039355 -0.140238859  0.294630133 -0.087055615  0.29681592 -0.0195864563
+N1  0.40774261  0.384069431 -0.052238390  0.140102223 -0.03211268  0.0910869094
+N2  0.38810881  0.352996209 -0.046124834  0.122308101 -0.02358685  0.1332696930
+N3  0.51905466  0.431172033 -0.046486372  0.110959915 -0.02594358  0.1709714673
+N4  1.00000000  0.396961696 -0.057607015  0.083985947 -0.05918711  0.2315541012
+N5  0.39696170  1.000000000 -0.147549171  0.196243903 -0.08352791  0.1064159817
+O1 -0.05760701 -0.147549171  1.000000000 -0.233610979  0.39125717  0.1727466319
+O2  0.08398595  0.196243903 -0.233610979  1.000000000 -0.29163004 -0.0815178964
+O3 -0.05918711 -0.083527913  0.391257168 -0.291630043  1.00000000  0.1729062034
+O4  0.23155410  0.106415982  0.172746632 -0.081517896  0.17290620  1.0000000000
+O5  0.03353977  0.142483491 -0.252496954  0.330997691 -0.32255970 -0.1835778712
+             O5
+A1  0.108564523
+A2 -0.079440368
+A3 -0.037213370
+A4  0.035085786
+A5 -0.042743473
+C1 -0.131123855
+C2 -0.056559804
+C3  0.004520572
+C4  0.183006619
+C5  0.048952044
+E1  0.091710883
+E2  0.079356655
+E3 -0.129110091
+E4  0.044415304
+E5 -0.114144445
+N1  0.103756799
+N2  0.018543969
+N3  0.054569937
+N4  0.033539766
+N5  0.142483491
+O1 -0.252496954
+O2  0.330997691
+O3 -0.322559697
+O4 -0.183577871
+O5  1.000000000</code></pre>
+</div>
+</div>
+</section>
+<section id="visual-correlation-matrix" class="level2">
+<h2 class="anchored" data-anchor-id="visual-correlation-matrix">Visual: correlation matrix</h2>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb35"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a>corrplot<span class="sc">::</span><span class="fu">corrplot</span>(<span class="fu">cor</span>(Test_Data <span class="sc">%&gt;%</span> <span class="fu">select</span>(<span class="sc">-</span>gender, <span class="sc">-</span>education, <span class="sc">-</span> age)), </span>
+<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a>                   <span class="at">method =</span> <span class="st">"color"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="02_EFA_files/figure-html/unnamed-chunk-12-1.png" class="img-fluid" width="672"></p>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb36"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a>corrplot<span class="sc">::</span><span class="fu">corrplot</span>(<span class="fu">cor</span>(Test_Data <span class="sc">%&gt;%</span> <span class="fu">select</span>(<span class="sc">-</span>gender, <span class="sc">-</span>education, <span class="sc">-</span> age)), </span>
+<span id="cb36-2"><a href="#cb36-2" aria-hidden="true" tabindex="-1"></a>                   <span class="at">method =</span> <span class="st">"circle"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="02_EFA_files/figure-html/unnamed-chunk-13-1.png" class="img-fluid" width="672"></p>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb37"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a>corrplot<span class="sc">::</span><span class="fu">corrplot</span>(<span class="fu">cor</span>(Test_Data <span class="sc">%&gt;%</span> <span class="fu">select</span>(<span class="sc">-</span>gender, <span class="sc">-</span>education, <span class="sc">-</span> age)), </span>
+<span id="cb37-2"><a href="#cb37-2" aria-hidden="true" tabindex="-1"></a>                   <span class="at">method =</span> <span class="st">"circle"</span>, <span class="at">type =</span> <span class="st">"lower"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="02_EFA_files/figure-html/unnamed-chunk-14-1.png" class="img-fluid" width="672"></p>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb38"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a>GGally<span class="sc">::</span><span class="fu">ggcorr</span>(Test_Data <span class="sc">%&gt;%</span> <span class="fu">select</span>(<span class="sc">-</span>gender, <span class="sc">-</span>education, <span class="sc">-</span> age))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Registered S3 method overwritten by 'GGally':
+  method from   
+  +.gg   ggplot2</code></pre>
+</div>
+<div class="cell-output-display">
+<p><img src="02_EFA_files/figure-html/unnamed-chunk-15-1.png" class="img-fluid" width="672"></p>
+</div>
+</div>
+</section>
+<section id="one-final-nuance" class="level2">
+<h2 class="anchored" data-anchor-id="one-final-nuance">One final nuance</h2>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb40"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a>Test_Data <span class="sc">%&lt;&gt;%</span> <span class="fu">mutate</span>(<span class="at">Temp_Id =</span> <span class="fu">seq</span>(<span class="dv">1</span>, <span class="fu">dim</span>(Test_Data)[<span class="dv">1</span>])) </span>
+<span id="cb40-2"><a href="#cb40-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb40-3"><a href="#cb40-3" aria-hidden="true" tabindex="-1"></a>Data_Factorial <span class="ot">&lt;-</span> Test_Data <span class="sc">%&gt;%</span> <span class="fu">select</span>(<span class="sc">-</span>gender, <span class="sc">-</span>education, <span class="sc">-</span> age, <span class="sc">-</span>Temp_Id)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+</section>
+<section id="efa" class="level1">
+<h1>EFA</h1>
+<section id="how-many-factors" class="level2">
+<h2 class="anchored" data-anchor-id="how-many-factors">How many factors?</h2>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb41"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a>Eigenvalues_Correlation <span class="ot">&lt;-</span> <span class="fu">eigen</span>(<span class="fu">cor</span>(Data_Factorial))</span>
+<span id="cb41-2"><a href="#cb41-2" aria-hidden="true" tabindex="-1"></a>Eigenvalues_Correlation<span class="sc">$</span>values</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code> [1] 5.0685162 2.7624793 2.1526230 1.8923330 1.5175329 1.0788293 0.8309057
+ [8] 0.8045002 0.7140883 0.7015381 0.6808421 0.6489735 0.6312563 0.5880320
+[15] 0.5659652 0.5448396 0.5199335 0.4938686 0.4827362 0.4425003 0.4288706
+[22] 0.4070974 0.3888753 0.3847626 0.2681008</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb43"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb43-1"><a href="#cb43-1" aria-hidden="true" tabindex="-1"></a><span class="fu">EMPKC</span>(Data_Factorial) <span class="co"># Empirical Kaiser Criterion (Braeken and van Assen, 2017)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>
+
+EMPIRICAL KAISER CRITERION</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>
+Kind of correlations analyzed: Pearson</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>    Nfactors    Eigenvalue    Reference Values
+           1         5.069               1.223
+           2         2.762               1.211
+           3         2.153               1.200
+           4         1.892               1.187
+           5         1.518               1.175
+           6         1.079               1.162
+           7         0.831               1.148
+           8         0.805               1.134
+           9         0.714               1.119
+          10         0.702               1.104
+          11         0.681               1.087
+          12         0.649               1.070
+          13         0.631               1.052
+          14         0.588               1.032
+          15         0.566               1.011
+          16         0.545               1.000
+          17         0.520               1.000
+          18         0.494               1.000
+          19         0.483               1.000
+          20         0.443               1.000
+          21         0.429               1.000
+          22         0.407               1.000
+          23         0.389               1.000
+          24         0.385               1.000
+          25         0.268               1.000</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>
+The number of factors according to the Empirical Kaiser Criterion = 5</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb48"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb48-1"><a href="#cb48-1" aria-hidden="true" tabindex="-1"></a><span class="fu">SCREE_PLOT</span>(Data_Factorial)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>
+Scree Plot:</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>
+Specified kind of correlations for this analysis: Pearson</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>
+
+Total Variance Explained (Initial Eigenvalues):</code></pre>
+</div>
+<div class="cell-output-display">
+<p><img src="02_EFA_files/figure-html/unnamed-chunk-19-1.png" class="img-fluid" width="672"></p>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>             Eigenvalues    Proportion of Variance    Cumulative Prop. Variance
+Factor 1            5.07                      0.20                         0.20
+Factor 2            2.76                      0.11                         0.31
+Factor 3            2.15                      0.09                         0.40
+Factor 4            1.89                      0.08                         0.48
+Factor 5            1.52                      0.06                         0.54
+Factor 6            1.08                      0.04                         0.58
+Factor 7            0.83                      0.03                         0.61
+Factor 8            0.80                      0.03                         0.64
+Factor 9            0.71                      0.03                         0.67
+Factor 10           0.70                      0.03                         0.70
+Factor 11           0.68                      0.03                         0.73
+Factor 12           0.65                      0.03                         0.75
+Factor 13           0.63                      0.03                         0.78
+Factor 14           0.59                      0.02                         0.80
+Factor 15           0.57                      0.02                         0.83
+Factor 16           0.54                      0.02                         0.85
+Factor 17           0.52                      0.02                         0.87
+Factor 18           0.49                      0.02                         0.89
+Factor 19           0.48                      0.02                         0.91
+Factor 20           0.44                      0.02                         0.92
+Factor 21           0.43                      0.02                         0.94
+Factor 22           0.41                      0.02                         0.96
+Factor 23           0.39                      0.02                         0.97
+Factor 24           0.38                      0.02                         0.99
+Factor 25           0.27                      0.01                         1.00</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb53"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb53-1"><a href="#cb53-1" aria-hidden="true" tabindex="-1"></a><span class="fu">fa.parallel</span>(Data_Factorial, <span class="at">fa =</span> <span class="st">"fa"</span>) <span class="co"># n.iter =</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="02_EFA_files/figure-html/unnamed-chunk-20-1.png" class="img-fluid" width="672"></p>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Parallel analysis suggests that the number of factors =  6  and the number of components =  NA </code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb55"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb55-1"><a href="#cb55-1" aria-hidden="true" tabindex="-1"></a><span class="fu">RAWPAR</span>(Data_Factorial, <span class="at">factormodel =</span> <span class="st">"PAF"</span>, <span class="at">Ndatasets =</span> <span class="dv">1000</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>
+
+PARALLEL ANALYSIS</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>
+Randomization method: generated data</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>
+Type of correlations specified for the real data eigenvalues: Pearson</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>
+Type of correlations specified for the random data eigenvalues: pearson</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>
+Extraction Method: Common Factor Analysis</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>
+Variables = 25</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>
+Cases = 2236</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>
+Ndatasets = 1000</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>
+Percentile = 95</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>
+Compare the Real Data eigenvalues below to the corresponding</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>random data Mean and Percentile eigenvalues</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>   Root   Real Data     Mean   Percentile
+      1       4.468    0.207        0.235
+      2       2.214    0.179        0.199
+      3       1.482    0.157        0.177
+      4       1.194    0.137        0.155
+      5       0.862    0.120        0.135
+      6       0.415    0.104        0.120
+      7       0.180    0.089        0.102
+      8       0.124    0.074        0.087
+      9       0.042    0.060        0.072
+     10       0.023    0.046        0.059
+     11       0.006    0.033        0.045
+     12      -0.037    0.019        0.032
+     13      -0.069    0.007        0.018
+     14      -0.081   -0.006        0.005
+     15      -0.104   -0.019       -0.007
+     16      -0.112   -0.032       -0.021
+     17      -0.121   -0.044       -0.034
+     18      -0.141   -0.058       -0.046
+     19      -0.149   -0.070       -0.060
+     20      -0.171   -0.084       -0.072
+     21      -0.176   -0.097       -0.085
+     22      -0.193   -0.112       -0.100
+     23      -0.205   -0.128       -0.114
+     24      -0.209   -0.145       -0.131
+     25      -0.232   -0.167       -0.149</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>
+The number of factors according to the parallel analysis = 8</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code></code></pre>
+</div>
+</div>
+</section>
+<section id="ful-model" class="level2">
+<h2 class="anchored" data-anchor-id="ful-model">Ful model</h2>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb70"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb70-1"><a href="#cb70-1" aria-hidden="true" tabindex="-1"></a>Full <span class="ot">&lt;-</span> <span class="fu">fa</span>(Data_Factorial, <span class="at">nfactors =</span> <span class="dv">25</span>, <span class="at">rotate =</span> <span class="st">"none"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb71"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb71-1"><a href="#cb71-1" aria-hidden="true" tabindex="-1"></a>Full</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Factor Analysis using method =  minres
+Call: fa(r = Data_Factorial, nfactors = 25, rotate = "none")
+Standardized loadings (pattern matrix) based upon correlation matrix
+     MR1   MR2   MR3   MR4   MR5   MR6   MR7   MR8   MR9  MR10  MR11  MR12
+A1 -0.22 -0.03  0.15  0.03 -0.42  0.31  0.07 -0.05  0.02  0.01 -0.02  0.10
+A2  0.47  0.31 -0.20  0.14  0.37 -0.23  0.14  0.15 -0.12  0.01 -0.05  0.07
+A3  0.53  0.31 -0.25  0.10  0.28  0.02  0.13 -0.12  0.09  0.00 -0.02 -0.12
+A4  0.41  0.13 -0.16  0.30  0.18  0.03 -0.01 -0.23 -0.06  0.23 -0.02  0.17
+A5  0.57  0.19 -0.27  0.04  0.18  0.15  0.02 -0.05  0.19 -0.10  0.07 -0.07
+C1  0.33  0.13  0.47  0.14  0.00  0.11 -0.09  0.19  0.17  0.03 -0.03  0.03
+C2  0.33  0.19  0.49  0.32  0.06  0.19 -0.10  0.06 -0.05  0.23 -0.03 -0.11
+C3  0.33  0.05  0.35  0.34  0.03  0.02  0.07  0.14 -0.07 -0.20  0.06  0.01
+C4 -0.47  0.13 -0.45 -0.24  0.02  0.27  0.08  0.06 -0.11  0.04  0.05  0.04
+C5 -0.50  0.16 -0.29 -0.31  0.12  0.08 -0.01  0.26  0.10  0.17 -0.08 -0.06
+E1 -0.43 -0.21  0.27  0.14  0.27  0.25  0.23 -0.14  0.06 -0.01 -0.09 -0.03
+E2 -0.63 -0.06  0.22  0.09  0.33  0.11  0.11 -0.01  0.03  0.03  0.20  0.02
+E3  0.55  0.34 -0.09 -0.20 -0.10  0.21  0.03 -0.09 -0.07 -0.11  0.01 -0.07
+E4  0.62  0.19 -0.34  0.08 -0.19  0.15 -0.16  0.03  0.15  0.01  0.02  0.12
+E5  0.53  0.30  0.11 -0.04 -0.23 -0.03  0.22  0.15 -0.11  0.02 -0.06  0.02
+N1 -0.43  0.65  0.06  0.09 -0.27 -0.13  0.13 -0.12  0.01  0.05  0.05 -0.03
+N2 -0.42  0.65  0.12  0.05 -0.22 -0.21  0.15  0.00  0.14  0.05  0.09 -0.01
+N3 -0.40  0.63  0.06  0.06 -0.01 -0.01 -0.13 -0.10  0.03 -0.11 -0.16  0.05
+N4 -0.54  0.42  0.09 -0.04  0.23  0.08 -0.11 -0.02 -0.06 -0.08 -0.22 -0.02
+N5 -0.36  0.44 -0.05  0.22  0.13  0.05 -0.27  0.02 -0.15 -0.03  0.18 -0.01
+O1  0.33  0.18  0.24 -0.36  0.02  0.16  0.14 -0.01 -0.09  0.01 -0.02  0.10
+O2 -0.20  0.09 -0.33  0.39 -0.05  0.15  0.10  0.15 -0.01 -0.01  0.01  0.01
+O3  0.40  0.28  0.19 -0.47  0.03  0.13 -0.05 -0.03 -0.08  0.05  0.11 -0.11
+O4 -0.09  0.24  0.18 -0.24  0.31  0.07  0.01  0.08  0.08 -0.08  0.06  0.18
+O5 -0.20 -0.05 -0.29  0.44 -0.15  0.21  0.06  0.06 -0.07 -0.05 -0.02 -0.06
+    MR13  MR14  MR15  MR16  MR17  MR18  MR19  MR20  MR21  MR22  MR23 MR24 MR25
+A1  0.05  0.17  0.00  0.08 -0.02 -0.02 -0.03  0.03  0.02 -0.01  0.00    0    0
+A2  0.07  0.07 -0.07  0.07  0.00  0.05 -0.01  0.02  0.00  0.03  0.00    0    0
+A3  0.01 -0.02  0.06  0.02 -0.08  0.01 -0.06  0.02  0.00 -0.05  0.00    0    0
+A4  0.02  0.02  0.07  0.00 -0.01 -0.03  0.04  0.00  0.00  0.00  0.01    0    0
+A5  0.04  0.09 -0.03 -0.05  0.06 -0.09  0.01 -0.03  0.03  0.02  0.00    0    0
+C1  0.08 -0.03 -0.03 -0.07 -0.13  0.00 -0.01  0.01 -0.04  0.01  0.01    0    0
+C2 -0.08 -0.02  0.01  0.03  0.04  0.00  0.02 -0.03  0.01  0.00 -0.01    0    0
+C3  0.09  0.01  0.12  0.12  0.02 -0.04  0.03 -0.02 -0.01  0.00  0.00    0    0
+C4  0.10 -0.06 -0.03  0.03 -0.08 -0.02  0.06 -0.05 -0.02 -0.02 -0.01    0    0
+C5  0.02  0.07  0.10  0.01  0.03  0.00 -0.01 -0.01  0.01  0.02  0.01    0    0
+E1  0.03 -0.05 -0.15  0.02  0.03  0.02  0.00 -0.02  0.00  0.02  0.01    0    0
+E2  0.01  0.10  0.06 -0.09  0.01  0.07  0.02  0.05 -0.01  0.00 -0.01    0    0
+E3 -0.14  0.06  0.04 -0.02 -0.02  0.05  0.05  0.00 -0.04  0.03  0.01    0    0
+E4  0.04 -0.06 -0.06  0.03  0.09  0.06  0.00  0.02 -0.03  0.00 -0.01    0    0
+E5  0.01  0.04 -0.07 -0.15  0.01 -0.03  0.04  0.02  0.03 -0.03  0.00    0    0
+N1  0.06 -0.10  0.03 -0.03 -0.01 -0.08 -0.03  0.02 -0.01  0.05 -0.01    0    0
+N2 -0.04  0.02 -0.03  0.07  0.06  0.05  0.03 -0.03 -0.01 -0.03  0.01    0    0
+N3  0.02  0.03  0.02 -0.01 -0.07  0.08  0.02 -0.03  0.05  0.01 -0.01    0    0
+N4  0.00  0.02 -0.01  0.01  0.08 -0.06  0.01  0.05 -0.04 -0.02  0.00    0    0
+N5  0.01  0.05 -0.08 -0.05  0.00 -0.02 -0.06 -0.03  0.00 -0.01  0.01    0    0
+O1 -0.02 -0.01  0.06 -0.04  0.06  0.03 -0.10 -0.05 -0.02  0.00  0.00    0    0
+O2 -0.21 -0.01 -0.05  0.06 -0.06 -0.03 -0.03  0.02  0.00  0.01  0.00    0    0
+O3  0.07 -0.07 -0.04  0.09 -0.01  0.02  0.01  0.06  0.04  0.00  0.01    0    0
+O4 -0.11 -0.13  0.04  0.00  0.00 -0.04  0.02  0.01  0.04  0.00  0.00    0    0
+O5  0.07 -0.12  0.09 -0.08  0.06  0.07  0.00  0.02  0.03  0.00  0.01    0    0
+     h2   u2 com
+A1 0.41 0.59 3.6
+A2 0.65 0.35 5.2
+A3 0.60 0.40 3.7
+A4 0.48 0.52 5.1
+A5 0.58 0.42 2.8
+C1 0.48 0.52 3.7
+C2 0.61 0.39 4.5
+C3 0.46 0.54 5.0
+C4 0.63 0.37 3.9
+C5 0.62 0.38 4.4
+E1 0.57 0.43 6.0
+E2 0.66 0.34 2.5
+E3 0.58 0.42 3.2
+E4 0.69 0.31 2.9
+E5 0.56 0.44 3.4
+N1 0.77 0.23 2.7
+N2 0.77 0.23 2.8
+N3 0.65 0.35 2.3
+N4 0.62 0.38 3.2
+N5 0.54 0.46 4.6
+O1 0.41 0.59 4.9
+O2 0.42 0.58 4.5
+O3 0.57 0.43 4.0
+O4 0.35 0.65 6.4
+O5 0.45 0.55 4.1
+
+                       MR1  MR2  MR3  MR4  MR5  MR6  MR7  MR8  MR9 MR10 MR11
+SS loadings           4.67 2.41 1.70 1.40 1.07 0.63 0.39 0.34 0.24 0.24 0.21
+Proportion Var        0.19 0.10 0.07 0.06 0.04 0.03 0.02 0.01 0.01 0.01 0.01
+Cumulative Var        0.19 0.28 0.35 0.41 0.45 0.47 0.49 0.50 0.51 0.52 0.53
+Proportion Explained  0.33 0.17 0.12 0.10 0.08 0.04 0.03 0.02 0.02 0.02 0.01
+Cumulative Proportion 0.33 0.50 0.62 0.72 0.80 0.84 0.87 0.89 0.91 0.93 0.94
+                      MR12 MR13 MR14 MR15 MR16 MR17 MR18 MR19 MR20 MR21 MR22
+SS loadings           0.16 0.13 0.12 0.10 0.10 0.07 0.05 0.03 0.02 0.02 0.01
+Proportion Var        0.01 0.01 0.00 0.00 0.00 0.00 0.00 0.00 0.00 0.00 0.00
+Cumulative Var        0.54 0.54 0.55 0.55 0.56 0.56 0.56 0.56 0.56 0.56 0.56
+Proportion Explained  0.01 0.01 0.01 0.01 0.01 0.01 0.00 0.00 0.00 0.00 0.00
+Cumulative Proportion 0.95 0.96 0.97 0.98 0.99 0.99 0.99 1.00 1.00 1.00 1.00
+                      MR23 MR24 MR25
+SS loadings           0.00 0.00 0.00
+Proportion Var        0.00 0.00 0.00
+Cumulative Var        0.56 0.56 0.56
+Proportion Explained  0.00 0.00 0.00
+Cumulative Proportion 1.00 1.00 1.00
+
+Mean item complexity =  4
+Test of the hypothesis that 25 factors are sufficient.
+
+df null model =  300  with the objective function =  7.41 with Chi Square =  16484.78
+df of  the model are -25  and the objective function was  0 
+
+The root mean square of the residuals (RMSR) is  0 
+The df corrected root mean square of the residuals is  NA 
+
+The harmonic n.obs is  2236 with the empirical chi square  0  with prob &lt;  NA 
+The total n.obs was  2236  with Likelihood Chi Square =  0  with prob &lt;  NA 
+
+Tucker Lewis Index of factoring reliability =  1.019
+Fit based upon off diagonal values = 1
+Measures of factor score adequacy             
+                                                   MR1  MR2  MR3  MR4  MR5  MR6
+Correlation of (regression) scores with factors   0.96 0.94 0.89 0.86 0.85 0.78
+Multiple R square of scores with factors          0.92 0.88 0.80 0.75 0.72 0.60
+Minimum correlation of possible factor scores     0.85 0.76 0.59 0.49 0.44 0.20
+                                                    MR7   MR8   MR9  MR10  MR11
+Correlation of (regression) scores with factors    0.70  0.66  0.61  0.59  0.59
+Multiple R square of scores with factors           0.49  0.43  0.37  0.35  0.35
+Minimum correlation of possible factor scores     -0.02 -0.13 -0.25 -0.30 -0.29
+                                                   MR12  MR13  MR14  MR15  MR16
+Correlation of (regression) scores with factors    0.50  0.47  0.46  0.43  0.42
+Multiple R square of scores with factors           0.25  0.22  0.21  0.19  0.18
+Minimum correlation of possible factor scores     -0.49 -0.57 -0.58 -0.62 -0.64
+                                                   MR17  MR18  MR19  MR20  MR21
+Correlation of (regression) scores with factors    0.39  0.36  0.26  0.23  0.19
+Multiple R square of scores with factors           0.15  0.13  0.07  0.05  0.04
+Minimum correlation of possible factor scores     -0.70 -0.75 -0.86 -0.90 -0.93
+                                                   MR22  MR23  MR24 MR25
+Correlation of (regression) scores with factors    0.17  0.06  0.01    0
+Multiple R square of scores with factors           0.03  0.00  0.00    0
+Minimum correlation of possible factor scores     -0.94 -0.99 -1.00   -1</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb73"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb73-1"><a href="#cb73-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sum</span>(Full<span class="sc">$</span>loadings[,<span class="dv">1</span>]<span class="sc">*</span>Full<span class="sc">$</span>loadings[,<span class="dv">1</span>])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 4.669779</code></pre>
+</div>
+</div>
+</section>
+<section id="different-rotations" class="level2">
+<h2 class="anchored" data-anchor-id="different-rotations">Different rotations</h2>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb75"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb75-1"><a href="#cb75-1" aria-hidden="true" tabindex="-1"></a>EFA_Varimax <span class="ot">&lt;-</span> <span class="fu">fa</span>(Data_Factorial, <span class="at">nfactors =</span> <span class="dv">5</span>, <span class="at">rotate =</span> <span class="st">"varimax"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb76"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb76-1"><a href="#cb76-1" aria-hidden="true" tabindex="-1"></a>EFA_Varimax</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Factor Analysis using method =  minres
+Call: fa(r = Data_Factorial, nfactors = 5, rotate = "varimax")
+Standardized loadings (pattern matrix) based upon correlation matrix
+     MR2   MR1   MR3   MR5   MR4   h2   u2 com
+A1  0.11  0.04  0.03 -0.42 -0.09 0.20 0.80 1.3
+A2  0.04  0.22  0.14  0.61  0.04 0.44 0.56 1.4
+A3  0.01  0.32  0.11  0.64  0.05 0.53 0.47 1.6
+A4 -0.06  0.20  0.22  0.43 -0.13 0.30 0.70 2.2
+A5 -0.12  0.38  0.09  0.53  0.05 0.46 0.54 2.0
+C1  0.02  0.06  0.54  0.03  0.21 0.34 0.66 1.3
+C2  0.09  0.02  0.64  0.11  0.10 0.44 0.56 1.2
+C3 -0.03  0.03  0.56  0.11 -0.01 0.33 0.67 1.1
+C4  0.24 -0.07 -0.63 -0.03 -0.10 0.47 0.53 1.4
+C5  0.28 -0.18 -0.56 -0.04  0.04 0.43 0.57 1.7
+E1  0.03 -0.57  0.03 -0.12 -0.06 0.34 0.66 1.1
+E2  0.24 -0.68 -0.10 -0.11 -0.05 0.55 0.45 1.4
+E3  0.02  0.55  0.09  0.26  0.28 0.46 0.54 2.0
+E4 -0.12  0.64  0.10  0.32 -0.08 0.54 0.46 1.7
+E5  0.04  0.51  0.32  0.09  0.20 0.42 0.58 2.1
+N1  0.79  0.08 -0.04 -0.21 -0.08 0.68 0.32 1.2
+N2  0.75  0.04 -0.02 -0.19 -0.01 0.61 0.39 1.1
+N3  0.73 -0.06 -0.06 -0.02  0.00 0.55 0.45 1.0
+N4  0.59 -0.35 -0.18  0.01  0.08 0.51 0.49 1.9
+N5  0.54 -0.16 -0.05  0.11 -0.16 0.35 0.65 1.5
+O1 -0.01  0.21  0.12  0.05  0.50 0.32 0.68 1.5
+O2  0.18  0.00 -0.10  0.10 -0.48 0.28 0.72 1.5
+O3  0.03  0.31  0.07  0.12  0.60 0.48 0.52 1.6
+O4  0.22 -0.19 -0.04  0.14  0.37 0.24 0.76 2.7
+O5  0.08 -0.01 -0.06 -0.02 -0.54 0.31 0.69 1.1
+
+                       MR2  MR1  MR3  MR5  MR4
+SS loadings           2.71 2.49 2.02 1.79 1.54
+Proportion Var        0.11 0.10 0.08 0.07 0.06
+Cumulative Var        0.11 0.21 0.29 0.36 0.42
+Proportion Explained  0.26 0.24 0.19 0.17 0.15
+Cumulative Proportion 0.26 0.49 0.68 0.85 1.00
+
+Mean item complexity =  1.5
+Test of the hypothesis that 5 factors are sufficient.
+
+df null model =  300  with the objective function =  7.41 with Chi Square =  16484.78
+df of  the model are 185  and the objective function was  0.63 
+
+The root mean square of the residuals (RMSR) is  0.03 
+The df corrected root mean square of the residuals is  0.04 
+
+The harmonic n.obs is  2236 with the empirical chi square  1046.45  with prob &lt;  3.1e-120 
+The total n.obs was  2236  with Likelihood Chi Square =  1400.38  with prob &lt;  1.6e-185 
+
+Tucker Lewis Index of factoring reliability =  0.878
+RMSEA index =  0.054  and the 90 % confidence intervals are  0.052 0.057
+BIC =  -26.42
+Fit based upon off diagonal values = 0.98
+Measures of factor score adequacy             
+                                                   MR2  MR1  MR3  MR5  MR4
+Correlation of (regression) scores with factors   0.92 0.88 0.86 0.84 0.83
+Multiple R square of scores with factors          0.85 0.77 0.74 0.70 0.69
+Minimum correlation of possible factor scores     0.71 0.54 0.48 0.41 0.38</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb78"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb78-1"><a href="#cb78-1" aria-hidden="true" tabindex="-1"></a>EFA_varimin <span class="ot">&lt;-</span> <span class="fu">fa</span>(Data_Factorial, <span class="at">nfactors =</span> <span class="dv">5</span>, <span class="at">rotate =</span> <span class="st">"varimin"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb79"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb79-1"><a href="#cb79-1" aria-hidden="true" tabindex="-1"></a>EFA_varimin</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Factor Analysis using method =  minres
+Call: fa(r = Data_Factorial, nfactors = 5, rotate = "varimin")
+Standardized loadings (pattern matrix) based upon correlation matrix
+     MR1   MR2   MR3   MR4   MR5   h2   u2 com
+A1 -0.25 -0.15  0.18  0.12 -0.25 0.20 0.80 4.0
+A2  0.40  0.31 -0.21  0.19  0.31 0.44 0.56 3.9
+A3  0.45  0.36 -0.27  0.23  0.26 0.53 0.47 3.9
+A4  0.32  0.07 -0.24  0.27  0.24 0.30 0.70 3.9
+A5  0.48  0.28 -0.31  0.19  0.11 0.46 0.54 2.9
+C1  0.39 -0.13  0.34  0.23  0.09 0.34 0.66 3.0
+C2  0.37 -0.16  0.33  0.34  0.23 0.44 0.56 4.1
+C3  0.34 -0.23  0.17  0.30  0.19 0.33 0.67 4.0
+C4 -0.50  0.35 -0.19 -0.22 -0.05 0.47 0.53 2.6
+C5 -0.46  0.36 -0.03 -0.30  0.01 0.43 0.57 2.7
+E1 -0.27 -0.29  0.19 -0.25  0.29 0.34 0.66 4.7
+E2 -0.46 -0.14  0.27 -0.31  0.39 0.55 0.45 3.7
+E3  0.46  0.39 -0.04  0.23 -0.19 0.46 0.54 2.9
+E4  0.42  0.23 -0.36  0.40 -0.16 0.54 0.46 3.9
+E5  0.44  0.18  0.10  0.37 -0.20 0.42 0.58 2.9
+N1 -0.50  0.37  0.37  0.39  0.02 0.68 0.32 3.7
+N2 -0.45  0.36  0.41  0.32  0.04 0.61 0.39 3.8
+N3 -0.41  0.40  0.34  0.24  0.20 0.55 0.45 4.1
+N4 -0.45  0.31  0.33 -0.08  0.31 0.51 0.49 3.7
+N5 -0.37  0.24  0.13  0.19  0.32 0.35 0.65 3.6
+O1  0.40  0.23  0.26 -0.07 -0.16 0.32 0.68 2.9
+O2 -0.33  0.00 -0.28  0.26  0.17 0.28 0.72 3.5
+O3  0.47  0.38  0.26 -0.07 -0.20 0.48 0.52 3.0
+O4  0.05  0.27  0.29 -0.21  0.19 0.24 0.76 3.7
+O5 -0.34 -0.15 -0.29  0.26  0.10 0.31 0.69 3.5
+
+                       MR1  MR2  MR3  MR4  MR5
+SS loadings           4.07 1.90 1.78 1.67 1.12
+Proportion Var        0.16 0.08 0.07 0.07 0.04
+Cumulative Var        0.16 0.24 0.31 0.38 0.42
+Proportion Explained  0.39 0.18 0.17 0.16 0.11
+Cumulative Proportion 0.39 0.57 0.74 0.89 1.00
+
+Mean item complexity =  3.5
+Test of the hypothesis that 5 factors are sufficient.
+
+df null model =  300  with the objective function =  7.41 with Chi Square =  16484.78
+df of  the model are 185  and the objective function was  0.63 
+
+The root mean square of the residuals (RMSR) is  0.03 
+The df corrected root mean square of the residuals is  0.04 
+
+The harmonic n.obs is  2236 with the empirical chi square  1046.45  with prob &lt;  3.1e-120 
+The total n.obs was  2236  with Likelihood Chi Square =  1400.38  with prob &lt;  1.6e-185 
+
+Tucker Lewis Index of factoring reliability =  0.878
+RMSEA index =  0.054  and the 90 % confidence intervals are  0.052 0.057
+BIC =  -26.42
+Fit based upon off diagonal values = 0.98
+Measures of factor score adequacy             
+                                                   MR1  MR2  MR3  MR4  MR5
+Correlation of (regression) scores with factors   0.93 0.88 0.87 0.85 0.81
+Multiple R square of scores with factors          0.86 0.77 0.75 0.73 0.65
+Minimum correlation of possible factor scores     0.73 0.53 0.50 0.45 0.30</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb81"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb81-1"><a href="#cb81-1" aria-hidden="true" tabindex="-1"></a>EFA_oblimin <span class="ot">&lt;-</span> <span class="fu">fa</span>(Data_Factorial, <span class="at">nfactors =</span> <span class="dv">5</span>, <span class="at">rotate =</span> <span class="st">"oblimin"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb82"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb82-1"><a href="#cb82-1" aria-hidden="true" tabindex="-1"></a>EFA_oblimin</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Factor Analysis using method =  minres
+Call: fa(r = Data_Factorial, nfactors = 5, rotate = "oblimin")
+Standardized loadings (pattern matrix) based upon correlation matrix
+     MR2   MR1   MR3   MR5   MR4   h2   u2 com
+A1  0.21 -0.18  0.08 -0.43 -0.07 0.20 0.80 2.0
+A2 -0.02 -0.01  0.07  0.64  0.02 0.44 0.56 1.0
+A3 -0.02 -0.11  0.03  0.67  0.03 0.53 0.47 1.1
+A4 -0.06 -0.07  0.19  0.45 -0.17 0.30 0.70 1.7
+A5 -0.12 -0.22  0.00  0.54  0.04 0.46 0.54 1.5
+C1  0.08  0.04  0.55  0.00  0.16 0.34 0.66 1.2
+C2  0.15  0.10  0.66  0.09  0.04 0.44 0.56 1.2
+C3  0.03  0.05  0.58  0.08 -0.07 0.33 0.67 1.1
+C4  0.15  0.01 -0.64  0.04 -0.04 0.47 0.53 1.1
+C5  0.17  0.15 -0.56  0.03  0.09 0.43 0.57 1.4
+E1 -0.07  0.54  0.10 -0.11 -0.10 0.34 0.66 1.3
+E2  0.09  0.67 -0.02 -0.07 -0.07 0.55 0.45 1.1
+E3  0.09 -0.42  0.01  0.24  0.30 0.46 0.54 2.6
+E4 -0.01 -0.57  0.02  0.32 -0.07 0.54 0.46 1.6
+E5  0.16 -0.43  0.27  0.07  0.21 0.42 0.58 2.6
+N1  0.83 -0.10  0.00 -0.10 -0.05 0.68 0.32 1.1
+N2  0.78 -0.04  0.01 -0.10  0.02 0.61 0.39 1.0
+N3  0.70  0.12 -0.03  0.09  0.02 0.55 0.45 1.1
+N4  0.46  0.41 -0.14  0.10  0.09 0.51 0.49 2.3
+N5  0.48  0.21 -0.02  0.21 -0.16 0.35 0.65 2.0
+O1  0.00 -0.09  0.08  0.00  0.52 0.32 0.68 1.1
+O2  0.19 -0.06 -0.08  0.17 -0.48 0.28 0.72 1.7
+O3  0.04 -0.16  0.00  0.07  0.62 0.48 0.52 1.2
+O4  0.11  0.33 -0.05  0.16  0.37 0.24 0.76 2.6
+O5  0.12 -0.10 -0.03  0.04 -0.55 0.31 0.69 1.2
+
+                       MR2  MR1  MR3  MR5  MR4
+SS loadings           2.56 2.21 2.07 2.04 1.65
+Proportion Var        0.10 0.09 0.08 0.08 0.07
+Cumulative Var        0.10 0.19 0.27 0.36 0.42
+Proportion Explained  0.24 0.21 0.20 0.19 0.16
+Cumulative Proportion 0.24 0.45 0.65 0.84 1.00
+
+ With factor correlations of 
+      MR2   MR1   MR3   MR5   MR4
+MR2  1.00  0.21 -0.19 -0.03  0.00
+MR1  0.21  1.00 -0.25 -0.33 -0.17
+MR3 -0.19 -0.25  1.00  0.19  0.19
+MR5 -0.03 -0.33  0.19  1.00  0.17
+MR4  0.00 -0.17  0.19  0.17  1.00
+
+Mean item complexity =  1.5
+Test of the hypothesis that 5 factors are sufficient.
+
+df null model =  300  with the objective function =  7.41 with Chi Square =  16484.78
+df of  the model are 185  and the objective function was  0.63 
+
+The root mean square of the residuals (RMSR) is  0.03 
+The df corrected root mean square of the residuals is  0.04 
+
+The harmonic n.obs is  2236 with the empirical chi square  1046.45  with prob &lt;  3.1e-120 
+The total n.obs was  2236  with Likelihood Chi Square =  1400.38  with prob &lt;  1.6e-185 
+
+Tucker Lewis Index of factoring reliability =  0.878
+RMSEA index =  0.054  and the 90 % confidence intervals are  0.052 0.057
+BIC =  -26.42
+Fit based upon off diagonal values = 0.98
+Measures of factor score adequacy             
+                                                   MR2  MR1  MR3  MR5  MR4
+Correlation of (regression) scores with factors   0.93 0.89 0.88 0.88 0.85
+Multiple R square of scores with factors          0.86 0.79 0.77 0.77 0.72
+Minimum correlation of possible factor scores     0.71 0.59 0.55 0.55 0.44</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb84"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb84-1"><a href="#cb84-1" aria-hidden="true" tabindex="-1"></a>loadings <span class="ot">&lt;-</span> EFA_oblimin<span class="sc">$</span>loadings</span>
+<span id="cb84-2"><a href="#cb84-2" aria-hidden="true" tabindex="-1"></a>loadings</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+Loadings:
+   MR2    MR1    MR3    MR5    MR4   
+A1  0.205 -0.178        -0.426       
+A2                       0.638       
+A3        -0.107         0.667       
+A4                0.185  0.450 -0.167
+A5 -0.121 -0.217         0.535       
+C1                0.550         0.160
+C2  0.145  0.104  0.659              
+C3                0.576              
+C4  0.154        -0.637              
+C5  0.167  0.150 -0.562              
+E1         0.539  0.104 -0.113       
+E2         0.672                     
+E3        -0.423         0.242  0.298
+E4        -0.572         0.318       
+E5  0.164 -0.426  0.268         0.207
+N1  0.833 -0.103        -0.103       
+N2  0.781                            
+N3  0.701  0.116                     
+N4  0.465  0.411 -0.137              
+N5  0.478  0.207         0.206 -0.161
+O1                              0.515
+O2  0.188                0.170 -0.481
+O3        -0.159                0.623
+O4  0.110  0.330         0.161  0.366
+O5  0.117                      -0.551
+
+                MR2   MR1   MR3   MR5   MR4
+SS loadings    2.49 1.957 1.956 1.863 1.587
+Proportion Var 0.10 0.078 0.078 0.075 0.063
+Cumulative Var 0.10 0.178 0.256 0.331 0.394</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb86"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb86-1"><a href="#cb86-1" aria-hidden="true" tabindex="-1"></a><span class="fu">fa.diagram</span>(EFA_oblimin)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="02_EFA_files/figure-html/unnamed-chunk-32-1.png" class="img-fluid" width="672"></p>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb87"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb87-1"><a href="#cb87-1" aria-hidden="true" tabindex="-1"></a>communalities <span class="ot">&lt;-</span> EFA_oblimin<span class="sc">$</span>communality</span>
+<span id="cb87-2"><a href="#cb87-2" aria-hidden="true" tabindex="-1"></a>communalities</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>       A1        A2        A3        A4        A5        C1        C2        C3 
+0.1977705 0.4403525 0.5263649 0.2989709 0.4553709 0.3397847 0.4392911 0.3269120 
+       C4        C5        E1        E2        E3        E4        E5        N1 
+0.4686006 0.4312841 0.3412718 0.5468470 0.4558448 0.5445540 0.4157993 0.6787696 
+       N2        N3        N4        N5        O1        O2        O3        O4 
+0.6057681 0.5456634 0.5065663 0.3536267 0.3155269 0.2828237 0.4753585 0.2421532 
+       O5 
+0.3068156 </code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb89"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb89-1"><a href="#cb89-1" aria-hidden="true" tabindex="-1"></a>uniquenesses <span class="ot">&lt;-</span> EFA_oblimin<span class="sc">$</span>uniquenesses</span>
+<span id="cb89-2"><a href="#cb89-2" aria-hidden="true" tabindex="-1"></a>uniquenesses</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>       A1        A2        A3        A4        A5        C1        C2        C3 
+0.8022295 0.5596475 0.4736351 0.7010291 0.5446291 0.6602153 0.5607089 0.6730880 
+       C4        C5        E1        E2        E3        E4        E5        N1 
+0.5313994 0.5687159 0.6587282 0.4531530 0.5441552 0.4554460 0.5842007 0.3212304 
+       N2        N3        N4        N5        O1        O2        O3        O4 
+0.3942319 0.4543366 0.4934337 0.6463733 0.6844731 0.7171763 0.5246415 0.7578468 
+       O5 
+0.6931844 </code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb91"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb91-1"><a href="#cb91-1" aria-hidden="true" tabindex="-1"></a>communalities <span class="sc">+</span> uniquenesses</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>A1 A2 A3 A4 A5 C1 C2 C3 C4 C5 E1 E2 E3 E4 E5 N1 N2 N3 N4 N5 O1 O2 O3 O4 O5 
+ 1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1 </code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb93"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb93-1"><a href="#cb93-1" aria-hidden="true" tabindex="-1"></a>factor_correlations <span class="ot">&lt;-</span> EFA_oblimin<span class="sc">$</span>Phi</span>
+<span id="cb93-2"><a href="#cb93-2" aria-hidden="true" tabindex="-1"></a>factor_correlations</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>             MR2        MR1        MR3         MR5          MR4
+MR2  1.000000000  0.2146213 -0.1854540 -0.02606769 -0.002886653
+MR1  0.214621297  1.0000000 -0.2451715 -0.33238603 -0.166980342
+MR3 -0.185454002 -0.2451715  1.0000000  0.18935459  0.185444183
+MR5 -0.026067686 -0.3323860  0.1893546  1.00000000  0.170964071
+MR4 -0.002886653 -0.1669803  0.1854442  0.17096407  1.000000000</code></pre>
+</div>
+</div>
+</section>
+<section id="esimation-method" class="level2">
+<h2 class="anchored" data-anchor-id="esimation-method">Esimation method</h2>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb95"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb95-1"><a href="#cb95-1" aria-hidden="true" tabindex="-1"></a>EFA <span class="ot">&lt;-</span> <span class="fu">fa</span>(Data_Factorial, <span class="at">nfactors =</span> <span class="dv">5</span>, <span class="at">rotate =</span> <span class="st">"oblimin"</span>, <span class="at">fm =</span> <span class="st">"pa"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb96"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb96-1"><a href="#cb96-1" aria-hidden="true" tabindex="-1"></a>EFA</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Factor Analysis using method =  pa
+Call: fa(r = Data_Factorial, nfactors = 5, rotate = "oblimin", fm = "pa")
+Standardized loadings (pattern matrix) based upon correlation matrix
+     PA2   PA1   PA3   PA5   PA4   h2   u2 com
+A1  0.21 -0.18  0.08 -0.43 -0.07 0.20 0.80 2.0
+A2 -0.02 -0.01  0.07  0.64  0.02 0.44 0.56 1.0
+A3 -0.02 -0.11  0.03  0.67  0.03 0.53 0.47 1.1
+A4 -0.06 -0.07  0.19  0.45 -0.17 0.30 0.70 1.7
+A5 -0.12 -0.22  0.00  0.54  0.04 0.46 0.54 1.5
+C1  0.08  0.04  0.55  0.00  0.16 0.34 0.66 1.2
+C2  0.15  0.10  0.66  0.09  0.04 0.44 0.56 1.2
+C3  0.03  0.05  0.58  0.08 -0.07 0.33 0.67 1.1
+C4  0.15  0.01 -0.64  0.04 -0.04 0.47 0.53 1.1
+C5  0.17  0.15 -0.56  0.03  0.09 0.43 0.57 1.4
+E1 -0.07  0.54  0.10 -0.11 -0.10 0.34 0.66 1.3
+E2  0.09  0.67 -0.02 -0.06 -0.07 0.55 0.45 1.1
+E3  0.09 -0.42  0.01  0.24  0.30 0.46 0.54 2.6
+E4 -0.01 -0.57  0.02  0.32 -0.07 0.54 0.46 1.6
+E5  0.16 -0.43  0.27  0.07  0.21 0.42 0.58 2.6
+N1  0.83 -0.10  0.00 -0.10 -0.05 0.68 0.32 1.1
+N2  0.78 -0.04  0.01 -0.10  0.02 0.61 0.39 1.0
+N3  0.70  0.12 -0.03  0.09  0.02 0.55 0.45 1.1
+N4  0.47  0.41 -0.14  0.10  0.09 0.51 0.49 2.3
+N5  0.48  0.21 -0.02  0.21 -0.16 0.35 0.65 2.0
+O1  0.00 -0.09  0.08  0.00  0.52 0.32 0.68 1.1
+O2  0.19 -0.06 -0.08  0.17 -0.48 0.28 0.72 1.7
+O3  0.04 -0.16  0.00  0.07  0.62 0.48 0.52 1.2
+O4  0.11  0.33 -0.05  0.16  0.37 0.24 0.76 2.6
+O5  0.12 -0.10 -0.03  0.04 -0.55 0.31 0.69 1.2
+
+                       PA2  PA1  PA3  PA5  PA4
+SS loadings           2.56 2.21 2.07 2.04 1.65
+Proportion Var        0.10 0.09 0.08 0.08 0.07
+Cumulative Var        0.10 0.19 0.27 0.36 0.42
+Proportion Explained  0.24 0.21 0.20 0.19 0.16
+Cumulative Proportion 0.24 0.45 0.65 0.84 1.00
+
+ With factor correlations of 
+      PA2   PA1   PA3   PA5   PA4
+PA2  1.00  0.21 -0.19 -0.03  0.00
+PA1  0.21  1.00 -0.25 -0.33 -0.17
+PA3 -0.19 -0.25  1.00  0.19  0.19
+PA5 -0.03 -0.33  0.19  1.00  0.17
+PA4  0.00 -0.17  0.19  0.17  1.00
+
+Mean item complexity =  1.5
+Test of the hypothesis that 5 factors are sufficient.
+
+df null model =  300  with the objective function =  7.41 with Chi Square =  16484.78
+df of  the model are 185  and the objective function was  0.63 
+
+The root mean square of the residuals (RMSR) is  0.03 
+The df corrected root mean square of the residuals is  0.04 
+
+The harmonic n.obs is  2236 with the empirical chi square  1046.45  with prob &lt;  3.1e-120 
+The total n.obs was  2236  with Likelihood Chi Square =  1400.57  with prob &lt;  1.5e-185 
+
+Tucker Lewis Index of factoring reliability =  0.878
+RMSEA index =  0.054  and the 90 % confidence intervals are  0.052 0.057
+BIC =  -26.23
+Fit based upon off diagonal values = 0.98
+Measures of factor score adequacy             
+                                                   PA2  PA1  PA3  PA5  PA4
+Correlation of (regression) scores with factors   0.93 0.89 0.88 0.88 0.85
+Multiple R square of scores with factors          0.86 0.79 0.77 0.77 0.72
+Minimum correlation of possible factor scores     0.71 0.59 0.55 0.55 0.44</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb98"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb98-1"><a href="#cb98-1" aria-hidden="true" tabindex="-1"></a>EFA <span class="ot">&lt;-</span> <span class="fu">fa</span>(Data_Factorial, <span class="at">nfactors =</span> <span class="dv">5</span>, <span class="at">rotate =</span> <span class="st">"oblimin"</span>, <span class="at">fm =</span> <span class="st">"ml"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb99"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb99-1"><a href="#cb99-1" aria-hidden="true" tabindex="-1"></a>EFA</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Factor Analysis using method =  ml
+Call: fa(r = Data_Factorial, nfactors = 5, rotate = "oblimin", fm = "ml")
+Standardized loadings (pattern matrix) based upon correlation matrix
+     ML2   ML5   ML3   ML1   ML4   h2   u2 com
+A1  0.20 -0.37  0.05 -0.16 -0.05 0.16 0.84 2.0
+A2 -0.01  0.61  0.08  0.01  0.02 0.40 0.60 1.0
+A3 -0.03  0.68  0.04 -0.06  0.04 0.52 0.48 1.0
+A4 -0.06  0.48  0.19 -0.05 -0.17 0.31 0.69 1.6
+A5 -0.14  0.58  0.00 -0.16  0.06 0.48 0.52 1.3
+C1  0.07  0.02  0.54  0.07  0.17 0.33 0.67 1.3
+C2  0.12  0.12  0.63  0.14  0.06 0.42 0.58 1.3
+C3  0.03  0.10  0.57  0.07 -0.06 0.33 0.67 1.1
+C4  0.10  0.07 -0.66  0.04 -0.02 0.48 0.52 1.1
+C5  0.13  0.02 -0.58  0.17  0.09 0.44 0.56 1.3
+E1 -0.10 -0.13  0.09  0.55 -0.11 0.36 0.64 1.3
+E2  0.06 -0.11 -0.03  0.65 -0.09 0.55 0.45 1.1
+E3  0.07  0.30  0.00 -0.34  0.33 0.46 0.54 3.1
+E4 -0.02  0.39  0.01 -0.51 -0.04 0.54 0.46 1.9
+E5  0.19  0.10  0.27 -0.39  0.23 0.42 0.58 3.1
+N1  0.86 -0.08  0.00 -0.09 -0.04 0.72 0.28 1.0
+N2  0.82 -0.09  0.02 -0.04  0.01 0.66 0.34 1.0
+N3  0.66  0.11 -0.04  0.16  0.02 0.53 0.47 1.2
+N4  0.41  0.09 -0.16  0.44  0.09 0.50 0.50 2.4
+N5  0.43  0.22 -0.04  0.25 -0.15 0.34 0.66 2.5
+O1 -0.02  0.01  0.07 -0.05  0.54 0.32 0.68 1.1
+O2  0.16  0.21 -0.10 -0.04 -0.47 0.28 0.72 1.8
+O3  0.02  0.08 -0.01 -0.11  0.65 0.48 0.52 1.1
+O4  0.07  0.13 -0.06  0.36  0.36 0.24 0.76 2.4
+O5  0.10  0.09 -0.05 -0.08 -0.53 0.29 0.71 1.2
+
+                       ML2  ML5  ML3  ML1  ML4
+SS loadings           2.48 2.18 2.08 2.07 1.71
+Proportion Var        0.10 0.09 0.08 0.08 0.07
+Cumulative Var        0.10 0.19 0.27 0.35 0.42
+Proportion Explained  0.24 0.21 0.20 0.20 0.16
+Cumulative Proportion 0.24 0.44 0.64 0.84 1.00
+
+ With factor correlations of 
+      ML2   ML5   ML3   ML1   ML4
+ML2  1.00 -0.02 -0.20  0.24  0.00
+ML5 -0.02  1.00  0.19 -0.32  0.21
+ML3 -0.20  0.19  1.00 -0.23  0.19
+ML1  0.24 -0.32 -0.23  1.00 -0.18
+ML4  0.00  0.21  0.19 -0.18  1.00
+
+Mean item complexity =  1.6
+Test of the hypothesis that 5 factors are sufficient.
+
+df null model =  300  with the objective function =  7.41 with Chi Square =  16484.78
+df of  the model are 185  and the objective function was  0.61 
+
+The root mean square of the residuals (RMSR) is  0.03 
+The df corrected root mean square of the residuals is  0.04 
+
+The harmonic n.obs is  2236 with the empirical chi square  1105.41  with prob &lt;  7.4e-131 
+The total n.obs was  2236  with Likelihood Chi Square =  1357.5  with prob &lt;  1.9e-177 
+
+Tucker Lewis Index of factoring reliability =  0.882
+RMSEA index =  0.053  and the 90 % confidence intervals are  0.051 0.056
+BIC =  -69.3
+Fit based upon off diagonal values = 0.98
+Measures of factor score adequacy             
+                                                   ML2  ML5  ML3  ML1  ML4
+Correlation of (regression) scores with factors   0.93 0.89 0.88 0.88 0.85
+Multiple R square of scores with factors          0.87 0.79 0.78 0.78 0.73
+Minimum correlation of possible factor scores     0.74 0.57 0.55 0.56 0.46</code></pre>
+</div>
+</div>
+</section>
+<section id="factor-scores" class="level2">
+<h2 class="anchored" data-anchor-id="factor-scores">Factor scores</h2>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb101"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb101-1"><a href="#cb101-1" aria-hidden="true" tabindex="-1"></a>EFA_Regression <span class="ot">&lt;-</span> <span class="fu">fa</span>(Data_Factorial, <span class="at">nfactors =</span> <span class="dv">5</span>, </span>
+<span id="cb101-2"><a href="#cb101-2" aria-hidden="true" tabindex="-1"></a>                     <span class="at">rotate =</span> <span class="st">"oblimin"</span>, <span class="at">fm =</span> <span class="st">"ml"</span>,</span>
+<span id="cb101-3"><a href="#cb101-3" aria-hidden="true" tabindex="-1"></a>                     <span class="at">scores =</span> <span class="st">"regression"</span>)</span>
+<span id="cb101-4"><a href="#cb101-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb101-5"><a href="#cb101-5" aria-hidden="true" tabindex="-1"></a>EFA_Bartlett <span class="ot">&lt;-</span> <span class="fu">fa</span>(Data_Factorial, <span class="at">nfactors =</span> <span class="dv">5</span>, </span>
+<span id="cb101-6"><a href="#cb101-6" aria-hidden="true" tabindex="-1"></a>                   <span class="at">rotate =</span> <span class="st">"oblimin"</span>, <span class="at">fm =</span> <span class="st">"ml"</span>,</span>
+<span id="cb101-7"><a href="#cb101-7" aria-hidden="true" tabindex="-1"></a>                   <span class="at">scores =</span> <span class="st">"Bartlett"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb102"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb102-1"><a href="#cb102-1" aria-hidden="true" tabindex="-1"></a>EFA_Regression<span class="sc">$</span>scores <span class="sc">%&gt;%</span> <span class="fu">head</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>             ML2         ML5        ML3         ML1        ML4
+[1,]  0.30873404  0.45862492  1.3448145 -1.02741580  0.6367320
+[2,]  0.70593522 -2.31022642 -1.0898323  1.31514996 -0.9807953
+[3,] -0.08509873 -0.01506444 -0.1860651 -0.34842066 -0.2911984
+[4,] -0.22502025 -1.57492864  0.5910568 -0.23058982 -0.2983634
+[5,] -1.00253868  0.43265136 -1.3295963 -0.38402365  0.3184753
+[6,]  0.93529784  1.08099814 -0.3139529  0.07351537  0.9746317</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb104"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb104-1"><a href="#cb104-1" aria-hidden="true" tabindex="-1"></a>EFA_Bartlett<span class="sc">$</span>scores <span class="sc">%&gt;%</span> <span class="fu">head</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>            ML2         ML5        ML3        ML1        ML4
+[1,]  0.4486268  0.34140036  1.7104774 -1.2952806  0.6828470
+[2,]  0.7575002 -2.86823907 -1.1688183  1.2628264 -1.0865940
+[3,] -0.0855193 -0.05712183 -0.2579873 -0.5173620 -0.4259007
+[4,] -0.2142354 -2.21120219  0.8706525 -0.5774081 -0.3844496
+[5,] -1.2094331  0.60464790 -1.9293863 -0.4224337  0.5368255
+[6,]  1.0629121  1.42903246 -0.4825082  0.2518345  1.3271042</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb106"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb106-1"><a href="#cb106-1" aria-hidden="true" tabindex="-1"></a>EFA_RegressionScores <span class="ot">&lt;-</span> EFA_Regression<span class="sc">$</span>scores</span>
+<span id="cb106-2"><a href="#cb106-2" aria-hidden="true" tabindex="-1"></a>EFA_RegressionScores <span class="ot">&lt;-</span> <span class="fu">as.data.frame</span>(EFA_RegressionScores)</span>
+<span id="cb106-3"><a href="#cb106-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb106-4"><a href="#cb106-4" aria-hidden="true" tabindex="-1"></a>EFA_BartlettScores <span class="ot">&lt;-</span> EFA_Bartlett<span class="sc">$</span>scores</span>
+<span id="cb106-5"><a href="#cb106-5" aria-hidden="true" tabindex="-1"></a>EFA_BartlettScores <span class="ot">&lt;-</span> <span class="fu">as.data.frame</span>(EFA_BartlettScores)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb107"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb107-1"><a href="#cb107-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cor</span>(EFA_RegressionScores)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>            ML2         ML5        ML3        ML1         ML4
+ML2  1.00000000 -0.03481771 -0.2442405  0.2877761 -0.01028316
+ML5 -0.03481771  1.00000000  0.2508227 -0.4381019  0.27568464
+ML3 -0.24424048  0.25082267  1.0000000 -0.3091870  0.26106726
+ML1  0.28777606 -0.43810188 -0.3091870  1.0000000 -0.25085056
+ML4 -0.01028316  0.27568464  0.2610673 -0.2508506  1.00000000</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb109"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb109-1"><a href="#cb109-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cor</span>(EFA_BartlettScores)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>              ML2          ML5        ML3        ML1           ML4
+ML2  1.0000000000 -0.009939055 -0.1578319  0.1810329 -0.0000110718
+ML5 -0.0099390555  1.000000000  0.1313984 -0.1891665  0.1421161944
+ML3 -0.1578319410  0.131398393  1.0000000 -0.1614366  0.1281681906
+ML1  0.1810328980 -0.189166515 -0.1614366  1.0000000 -0.1036455537
+ML4 -0.0000110718  0.142116194  0.1281682 -0.1036456  1.0000000000</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb111"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb111-1"><a href="#cb111-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cor</span>(EFA_RegressionScores<span class="sc">$</span>ML1, EFA_BartlettScores<span class="sc">$</span>ML1)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 0.9860482</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb113"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb113-1"><a href="#cb113-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cor</span>(EFA_RegressionScores<span class="sc">$</span>ML2, EFA_BartlettScores<span class="sc">$</span>ML2)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 0.9988308</code></pre>
+</div>
+</div>
+</section>
+</section>
+<section id="pre-efa" class="level1">
+<h1>Pre-EFA</h1>
+<section id="multivariate-normality" class="level2">
+<h2 class="anchored" data-anchor-id="multivariate-normality">Multivariate normality?</h2>
+<p><a href="https://cran.r-project.org/web/packages/MVN/vignettes/MVN.html#16_Energy_test">See this.</a></p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb115"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb115-1"><a href="#cb115-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(MVN)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning: package 'MVN' was built under R version 4.3.3</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb117"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb117-1"><a href="#cb117-1" aria-hidden="true" tabindex="-1"></a><span class="fu">mvn</span>(<span class="at">data =</span> Data_Factorial, </span>
+<span id="cb117-2"><a href="#cb117-2" aria-hidden="true" tabindex="-1"></a>    <span class="at">mvnTest =</span> <span class="st">"mardia"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>$multivariateNormality
+             Test        Statistic p value Result
+1 Mardia Skewness  11107.275452718       0     NO
+2 Mardia Kurtosis 69.4941876094799       0     NO
+3             MVN             &lt;NA&gt;    &lt;NA&gt;     NO
+
+$univariateNormality
+               Test  Variable Statistic   p value Normality
+1  Anderson-Darling    A1      123.3975  &lt;0.001      NO    
+2  Anderson-Darling    A2      126.8146  &lt;0.001      NO    
+3  Anderson-Darling    A3      115.0270  &lt;0.001      NO    
+4  Anderson-Darling    A4      156.7147  &lt;0.001      NO    
+5  Anderson-Darling    A5      101.8863  &lt;0.001      NO    
+6  Anderson-Darling    C1      101.5975  &lt;0.001      NO    
+7  Anderson-Darling    C2       94.7464  &lt;0.001      NO    
+8  Anderson-Darling    C3       85.6328  &lt;0.001      NO    
+9  Anderson-Darling    C4       97.4888  &lt;0.001      NO    
+10 Anderson-Darling    C5       69.2777  &lt;0.001      NO    
+11 Anderson-Darling    E1       77.5202  &lt;0.001      NO    
+12 Anderson-Darling    E2       70.5265  &lt;0.001      NO    
+13 Anderson-Darling    E3       68.2524  &lt;0.001      NO    
+14 Anderson-Darling    E4      114.1723  &lt;0.001      NO    
+15 Anderson-Darling    E5       97.0157  &lt;0.001      NO    
+16 Anderson-Darling    N1       74.8028  &lt;0.001      NO    
+17 Anderson-Darling    N2       58.1987  &lt;0.001      NO    
+18 Anderson-Darling    N3       69.0141  &lt;0.001      NO    
+19 Anderson-Darling    N4       62.1158  &lt;0.001      NO    
+20 Anderson-Darling    N5       80.5125  &lt;0.001      NO    
+21 Anderson-Darling    O1      113.7106  &lt;0.001      NO    
+22 Anderson-Darling    O2       96.3713  &lt;0.001      NO    
+23 Anderson-Darling    O3       89.7691  &lt;0.001      NO    
+24 Anderson-Darling    O4      149.2474  &lt;0.001      NO    
+25 Anderson-Darling    O5       99.6713  &lt;0.001      NO    
+
+$Descriptives
+      n     Mean  Std.Dev Median Min Max 25th 75th        Skew    Kurtosis
+A1 2236 2.365385 1.391968      2   1   6    1    3  0.88433371 -0.16693828
+A2 2236 4.834079 1.156915      5   1   6    4    6 -1.14884458  1.14040256
+A3 2236 4.629249 1.289373      5   1   6    4    6 -1.03448938  0.56428174
+A4 2236 4.749553 1.447941      5   1   6    4    6 -1.09407464  0.23498989
+A5 2236 4.584973 1.255833      5   1   6    4    6 -0.88005636  0.23767503
+C1 2236 4.569767 1.216611      5   1   6    4    5 -0.89411758  0.41557496
+C2 2236 4.401163 1.311310      5   1   6    4    5 -0.76927522 -0.09261008
+C3 2236 4.322898 1.287153      5   1   6    4    5 -0.69211877 -0.10994138
+C4 2236 2.500894 1.362817      2   1   6    1    4  0.64057056 -0.56219060
+C5 2236 3.255367 1.629590      3   1   6    2    5  0.09185556 -1.23156045
+E1 2236 2.969589 1.618121      3   1   6    2    4  0.38233076 -1.06810482
+E2 2236 3.121199 1.605660      3   1   6    2    4  0.25430774 -1.12643645
+E3 2236 4.009839 1.342438      4   1   6    3    5 -0.47932428 -0.43210992
+E4 2236 4.430680 1.459100      5   1   6    4    6 -0.84560593 -0.26772160
+E5 2236 4.418605 1.330117      5   1   6    4    5 -0.81068649 -0.02830899
+N1 2236 2.908318 1.564455      3   1   6    2    4  0.38955663 -0.99020110
+N2 2236 3.485689 1.534764      4   1   6    2    5 -0.06321150 -1.06829840
+N3 2236 3.198569 1.596394      3   1   6    2    4  0.16527086 -1.17968936
+N4 2236 3.175313 1.560600      3   1   6    2    4  0.21687387 -1.05942427
+N5 2236 2.952147 1.621980      3   1   6    2    4  0.39924902 -1.05494210
+O1 2236 4.821556 1.120043      5   1   6    4    6 -0.90755246  0.46521123
+O2 2236 2.689177 1.545865      2   1   6    1    4  0.60609718 -0.76799127
+O3 2236 4.483005 1.193261      5   1   6    4    5 -0.79209737  0.40098728
+O4 2236 4.948122 1.175435      5   1   6    4    6 -1.25933720  1.26086859
+O5 2236 2.455277 1.329501      2   1   6    1    3  0.78355138 -0.16476654</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb119"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb119-1"><a href="#cb119-1" aria-hidden="true" tabindex="-1"></a><span class="fu">mvn</span>(<span class="at">data =</span> Data_Factorial, </span>
+<span id="cb119-2"><a href="#cb119-2" aria-hidden="true" tabindex="-1"></a>    <span class="at">mvnTest =</span> <span class="st">"hz"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>$multivariateNormality
+           Test       HZ p value MVN
+1 Henze-Zirkler 1.051814       0  NO
+
+$univariateNormality
+               Test  Variable Statistic   p value Normality
+1  Anderson-Darling    A1      123.3975  &lt;0.001      NO    
+2  Anderson-Darling    A2      126.8146  &lt;0.001      NO    
+3  Anderson-Darling    A3      115.0270  &lt;0.001      NO    
+4  Anderson-Darling    A4      156.7147  &lt;0.001      NO    
+5  Anderson-Darling    A5      101.8863  &lt;0.001      NO    
+6  Anderson-Darling    C1      101.5975  &lt;0.001      NO    
+7  Anderson-Darling    C2       94.7464  &lt;0.001      NO    
+8  Anderson-Darling    C3       85.6328  &lt;0.001      NO    
+9  Anderson-Darling    C4       97.4888  &lt;0.001      NO    
+10 Anderson-Darling    C5       69.2777  &lt;0.001      NO    
+11 Anderson-Darling    E1       77.5202  &lt;0.001      NO    
+12 Anderson-Darling    E2       70.5265  &lt;0.001      NO    
+13 Anderson-Darling    E3       68.2524  &lt;0.001      NO    
+14 Anderson-Darling    E4      114.1723  &lt;0.001      NO    
+15 Anderson-Darling    E5       97.0157  &lt;0.001      NO    
+16 Anderson-Darling    N1       74.8028  &lt;0.001      NO    
+17 Anderson-Darling    N2       58.1987  &lt;0.001      NO    
+18 Anderson-Darling    N3       69.0141  &lt;0.001      NO    
+19 Anderson-Darling    N4       62.1158  &lt;0.001      NO    
+20 Anderson-Darling    N5       80.5125  &lt;0.001      NO    
+21 Anderson-Darling    O1      113.7106  &lt;0.001      NO    
+22 Anderson-Darling    O2       96.3713  &lt;0.001      NO    
+23 Anderson-Darling    O3       89.7691  &lt;0.001      NO    
+24 Anderson-Darling    O4      149.2474  &lt;0.001      NO    
+25 Anderson-Darling    O5       99.6713  &lt;0.001      NO    
+
+$Descriptives
+      n     Mean  Std.Dev Median Min Max 25th 75th        Skew    Kurtosis
+A1 2236 2.365385 1.391968      2   1   6    1    3  0.88433371 -0.16693828
+A2 2236 4.834079 1.156915      5   1   6    4    6 -1.14884458  1.14040256
+A3 2236 4.629249 1.289373      5   1   6    4    6 -1.03448938  0.56428174
+A4 2236 4.749553 1.447941      5   1   6    4    6 -1.09407464  0.23498989
+A5 2236 4.584973 1.255833      5   1   6    4    6 -0.88005636  0.23767503
+C1 2236 4.569767 1.216611      5   1   6    4    5 -0.89411758  0.41557496
+C2 2236 4.401163 1.311310      5   1   6    4    5 -0.76927522 -0.09261008
+C3 2236 4.322898 1.287153      5   1   6    4    5 -0.69211877 -0.10994138
+C4 2236 2.500894 1.362817      2   1   6    1    4  0.64057056 -0.56219060
+C5 2236 3.255367 1.629590      3   1   6    2    5  0.09185556 -1.23156045
+E1 2236 2.969589 1.618121      3   1   6    2    4  0.38233076 -1.06810482
+E2 2236 3.121199 1.605660      3   1   6    2    4  0.25430774 -1.12643645
+E3 2236 4.009839 1.342438      4   1   6    3    5 -0.47932428 -0.43210992
+E4 2236 4.430680 1.459100      5   1   6    4    6 -0.84560593 -0.26772160
+E5 2236 4.418605 1.330117      5   1   6    4    5 -0.81068649 -0.02830899
+N1 2236 2.908318 1.564455      3   1   6    2    4  0.38955663 -0.99020110
+N2 2236 3.485689 1.534764      4   1   6    2    5 -0.06321150 -1.06829840
+N3 2236 3.198569 1.596394      3   1   6    2    4  0.16527086 -1.17968936
+N4 2236 3.175313 1.560600      3   1   6    2    4  0.21687387 -1.05942427
+N5 2236 2.952147 1.621980      3   1   6    2    4  0.39924902 -1.05494210
+O1 2236 4.821556 1.120043      5   1   6    4    6 -0.90755246  0.46521123
+O2 2236 2.689177 1.545865      2   1   6    1    4  0.60609718 -0.76799127
+O3 2236 4.483005 1.193261      5   1   6    4    5 -0.79209737  0.40098728
+O4 2236 4.948122 1.175435      5   1   6    4    6 -1.25933720  1.26086859
+O5 2236 2.455277 1.329501      2   1   6    1    3  0.78355138 -0.16476654</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb121"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb121-1"><a href="#cb121-1" aria-hidden="true" tabindex="-1"></a><span class="fu">mvn</span>(<span class="at">data =</span> Data_Factorial, </span>
+<span id="cb121-2"><a href="#cb121-2" aria-hidden="true" tabindex="-1"></a>    <span class="at">mvnTest =</span> <span class="st">"dh"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>$multivariateNormality
+            Test        E df p value MVN
+1 Doornik-Hansen 1737.887 50       0  NO
+
+$univariateNormality
+               Test  Variable Statistic   p value Normality
+1  Anderson-Darling    A1      123.3975  &lt;0.001      NO    
+2  Anderson-Darling    A2      126.8146  &lt;0.001      NO    
+3  Anderson-Darling    A3      115.0270  &lt;0.001      NO    
+4  Anderson-Darling    A4      156.7147  &lt;0.001      NO    
+5  Anderson-Darling    A5      101.8863  &lt;0.001      NO    
+6  Anderson-Darling    C1      101.5975  &lt;0.001      NO    
+7  Anderson-Darling    C2       94.7464  &lt;0.001      NO    
+8  Anderson-Darling    C3       85.6328  &lt;0.001      NO    
+9  Anderson-Darling    C4       97.4888  &lt;0.001      NO    
+10 Anderson-Darling    C5       69.2777  &lt;0.001      NO    
+11 Anderson-Darling    E1       77.5202  &lt;0.001      NO    
+12 Anderson-Darling    E2       70.5265  &lt;0.001      NO    
+13 Anderson-Darling    E3       68.2524  &lt;0.001      NO    
+14 Anderson-Darling    E4      114.1723  &lt;0.001      NO    
+15 Anderson-Darling    E5       97.0157  &lt;0.001      NO    
+16 Anderson-Darling    N1       74.8028  &lt;0.001      NO    
+17 Anderson-Darling    N2       58.1987  &lt;0.001      NO    
+18 Anderson-Darling    N3       69.0141  &lt;0.001      NO    
+19 Anderson-Darling    N4       62.1158  &lt;0.001      NO    
+20 Anderson-Darling    N5       80.5125  &lt;0.001      NO    
+21 Anderson-Darling    O1      113.7106  &lt;0.001      NO    
+22 Anderson-Darling    O2       96.3713  &lt;0.001      NO    
+23 Anderson-Darling    O3       89.7691  &lt;0.001      NO    
+24 Anderson-Darling    O4      149.2474  &lt;0.001      NO    
+25 Anderson-Darling    O5       99.6713  &lt;0.001      NO    
+
+$Descriptives
+      n     Mean  Std.Dev Median Min Max 25th 75th        Skew    Kurtosis
+A1 2236 2.365385 1.391968      2   1   6    1    3  0.88433371 -0.16693828
+A2 2236 4.834079 1.156915      5   1   6    4    6 -1.14884458  1.14040256
+A3 2236 4.629249 1.289373      5   1   6    4    6 -1.03448938  0.56428174
+A4 2236 4.749553 1.447941      5   1   6    4    6 -1.09407464  0.23498989
+A5 2236 4.584973 1.255833      5   1   6    4    6 -0.88005636  0.23767503
+C1 2236 4.569767 1.216611      5   1   6    4    5 -0.89411758  0.41557496
+C2 2236 4.401163 1.311310      5   1   6    4    5 -0.76927522 -0.09261008
+C3 2236 4.322898 1.287153      5   1   6    4    5 -0.69211877 -0.10994138
+C4 2236 2.500894 1.362817      2   1   6    1    4  0.64057056 -0.56219060
+C5 2236 3.255367 1.629590      3   1   6    2    5  0.09185556 -1.23156045
+E1 2236 2.969589 1.618121      3   1   6    2    4  0.38233076 -1.06810482
+E2 2236 3.121199 1.605660      3   1   6    2    4  0.25430774 -1.12643645
+E3 2236 4.009839 1.342438      4   1   6    3    5 -0.47932428 -0.43210992
+E4 2236 4.430680 1.459100      5   1   6    4    6 -0.84560593 -0.26772160
+E5 2236 4.418605 1.330117      5   1   6    4    5 -0.81068649 -0.02830899
+N1 2236 2.908318 1.564455      3   1   6    2    4  0.38955663 -0.99020110
+N2 2236 3.485689 1.534764      4   1   6    2    5 -0.06321150 -1.06829840
+N3 2236 3.198569 1.596394      3   1   6    2    4  0.16527086 -1.17968936
+N4 2236 3.175313 1.560600      3   1   6    2    4  0.21687387 -1.05942427
+N5 2236 2.952147 1.621980      3   1   6    2    4  0.39924902 -1.05494210
+O1 2236 4.821556 1.120043      5   1   6    4    6 -0.90755246  0.46521123
+O2 2236 2.689177 1.545865      2   1   6    1    4  0.60609718 -0.76799127
+O3 2236 4.483005 1.193261      5   1   6    4    5 -0.79209737  0.40098728
+O4 2236 4.948122 1.175435      5   1   6    4    6 -1.25933720  1.26086859
+O5 2236 2.455277 1.329501      2   1   6    1    3  0.78355138 -0.16476654</code></pre>
+</div>
+</div>
+</section>
+<section id="kmo" class="level2">
+<h2 class="anchored" data-anchor-id="kmo">KMO</h2>
+<p>Remember: The Kaiser-Meyer-Olkin (KMO) measure is a statistic that indicates the proportion of variance among the variables that might be common variance (i.e., that might be caused by underlying factors). It is used to examine the appropriateness of factor analysis. High values (close to 1) indicate that a factor analysis may be useful with your data. Low values (close to 0) suggest that factor analysis may not be appropriate.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb123"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb123-1"><a href="#cb123-1" aria-hidden="true" tabindex="-1"></a><span class="fu">KMO</span>(Data_Factorial)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Kaiser-Meyer-Olkin factor adequacy
+Call: KMO(r = Data_Factorial)
+Overall MSA =  0.85
+MSA for each item = 
+  A1   A2   A3   A4   A5   C1   C2   C3   C4   C5   E1   E2   E3   E4   E5   N1 
+0.74 0.83 0.87 0.87 0.90 0.84 0.79 0.85 0.82 0.86 0.84 0.88 0.89 0.88 0.89 0.78 
+  N2   N3   N4   N5   O1   O2   O3   O4   O5 
+0.78 0.86 0.89 0.86 0.86 0.78 0.83 0.78 0.76 </code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb125"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb125-1"><a href="#cb125-1" aria-hidden="true" tabindex="-1"></a><span class="fu">KMO</span>(Data_Factorial <span class="sc">%&gt;%</span> <span class="fu">select</span>(A1, A2, A3, A4, A5))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Kaiser-Meyer-Olkin factor adequacy
+Call: KMO(r = Data_Factorial %&gt;% select(A1, A2, A3, A4, A5))
+Overall MSA =  0.76
+MSA for each item = 
+  A1   A2   A3   A4   A5 
+0.78 0.76 0.73 0.82 0.77 </code></pre>
+</div>
+</div>
+</section>
+<section id="reliability" class="level2">
+<h2 class="anchored" data-anchor-id="reliability">Reliability</h2>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb127"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb127-1"><a href="#cb127-1" aria-hidden="true" tabindex="-1"></a>Data_Factorial <span class="sc">%&gt;%</span> <span class="fu">names</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code> [1] "A1" "A2" "A3" "A4" "A5" "C1" "C2" "C3" "C4" "C5" "E1" "E2" "E3" "E4" "E5"
+[16] "N1" "N2" "N3" "N4" "N5" "O1" "O2" "O3" "O4" "O5"</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb129"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb129-1"><a href="#cb129-1" aria-hidden="true" tabindex="-1"></a><span class="fu">alpha</span>(Data_Factorial <span class="sc">%&gt;%</span> <span class="fu">select</span>(A1, A2, A3, A4, A5))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning in alpha(Data_Factorial %&gt;% select(A1, A2, A3, A4, A5)): Some items were negatively correlated with the first principal component and probably 
+should be reversed.  
+To do this, run the function again with the 'check.keys=TRUE' option</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Some items ( A1 ) were negatively correlated with the first principal component and 
+probably should be reversed.  
+To do this, run the function again with the 'check.keys=TRUE' option</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+Reliability analysis   
+Call: alpha(x = Data_Factorial %&gt;% select(A1, A2, A3, A4, A5))
+
+  raw_alpha std.alpha G6(smc) average_r  S/N   ase mean   sd median_r
+      0.44      0.46    0.54      0.15 0.86 0.018  4.2 0.73     0.33
+
+    95% confidence boundaries 
+         lower alpha upper
+Feldt      0.4  0.44  0.47
+Duhachek   0.4  0.44  0.47
+
+ Reliability if an item is dropped:
+   raw_alpha std.alpha G6(smc) average_r  S/N alpha se  var.r med.r
+A1      0.72      0.73    0.68     0.401 2.67   0.0096 0.0058 0.380
+A2      0.29      0.31    0.39     0.100 0.45   0.0242 0.1116 0.086
+A3      0.18      0.21    0.31     0.062 0.26   0.0278 0.1021 0.086
+A4      0.25      0.30    0.43     0.097 0.43   0.0257 0.1595 0.098
+A5      0.22      0.25    0.37     0.076 0.33   0.0263 0.1330 0.099
+
+ Item statistics 
+      n raw.r std.r r.cor r.drop mean  sd
+A1 2236  0.06 0.024 -0.39  -0.31  2.4 1.4
+A2 2236  0.63 0.663  0.58   0.37  4.8 1.2
+A3 2236  0.73 0.746  0.72   0.48  4.6 1.3
+A4 2236  0.69 0.671  0.52   0.38  4.7 1.4
+A5 2236  0.70 0.715  0.63   0.44  4.6 1.3
+
+Non missing response frequency for each item
+      1    2    3    4    5    6 miss
+A1 0.34 0.30 0.14 0.12 0.07 0.03    0
+A2 0.02 0.04 0.05 0.19 0.37 0.32    0
+A3 0.03 0.06 0.07 0.20 0.36 0.28    0
+A4 0.04 0.07 0.06 0.16 0.24 0.42    0
+A5 0.02 0.06 0.09 0.22 0.35 0.26    0</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb133"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb133-1"><a href="#cb133-1" aria-hidden="true" tabindex="-1"></a><span class="fu">alpha</span>(Data_Factorial <span class="sc">%&gt;%</span> <span class="fu">select</span>(A1, A2, A3, A4, A5), </span>
+<span id="cb133-2"><a href="#cb133-2" aria-hidden="true" tabindex="-1"></a>      <span class="at">check.keys =</span> <span class="cn">TRUE</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning in alpha(Data_Factorial %&gt;% select(A1, A2, A3, A4, A5), check.keys = TRUE): Some items were negatively correlated with the first principal component and were automatically reversed.
+ This is indicated by a negative sign for the variable name.</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+Reliability analysis   
+Call: alpha(x = Data_Factorial %&gt;% select(A1, A2, A3, A4, A5), check.keys = TRUE)
+
+  raw_alpha std.alpha G6(smc) average_r  S/N    ase mean   sd median_r
+      0.71      0.46    0.54      0.15 0.86 0.0099  4.7 0.89     0.33
+
+    95% confidence boundaries 
+         lower alpha upper
+Feldt     0.69  0.71  0.72
+Duhachek  0.69  0.71  0.72
+
+ Reliability if an item is dropped:
+    raw_alpha std.alpha G6(smc) average_r  S/N alpha se  var.r med.r
+A1-      0.72      0.73    0.68     0.401 2.67   0.0096 0.0058 0.380
+A2       0.62      0.31    0.39     0.100 0.45   0.0132 0.1116 0.086
+A3       0.60      0.21    0.31     0.062 0.26   0.0139 0.1021 0.086
+A4       0.68      0.30    0.43     0.097 0.43   0.0110 0.1595 0.098
+A5       0.65      0.25    0.37     0.076 0.33   0.0124 0.1330 0.099
+
+ Item statistics 
+       n raw.r std.r r.cor r.drop mean  sd
+A1- 2236  0.58 0.024 -0.39   0.31  4.6 1.4
+A2  2236  0.73 0.663  0.58   0.56  4.8 1.2
+A3  2236  0.76 0.746  0.72   0.59  4.6 1.3
+A4  2236  0.66 0.671  0.52   0.40  4.7 1.4
+A5  2236  0.69 0.715  0.63   0.49  4.6 1.3
+
+Non missing response frequency for each item
+      1    2    3    4    5    6 miss
+A1 0.34 0.30 0.14 0.12 0.07 0.03    0
+A2 0.02 0.04 0.05 0.19 0.37 0.32    0
+A3 0.03 0.06 0.07 0.20 0.36 0.28    0
+A4 0.04 0.07 0.06 0.16 0.24 0.42    0
+A5 0.02 0.06 0.09 0.22 0.35 0.26    0</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb136"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb136-1"><a href="#cb136-1" aria-hidden="true" tabindex="-1"></a><span class="fu">omega</span>(Data_Factorial <span class="sc">%&gt;%</span> <span class="fu">select</span>(A1, A2, A3, A4, A5))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="02_EFA_files/figure-html/unnamed-chunk-58-1.png" class="img-fluid" width="672"></p>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Omega 
+Call: omegah(m = m, nfactors = nfactors, fm = fm, key = key, flip = flip, 
+    digits = digits, title = title, sl = sl, labels = labels, 
+    plot = plot, n.obs = n.obs, rotate = rotate, Phi = Phi, option = option, 
+    covar = covar)
+Alpha:                 0.71 
+G.6:                   0.68 
+Omega Hierarchical:    0.68 
+Omega H asymptotic:    0.9 
+Omega Total            0.76 
+
+Schmid Leiman Factor loadings greater than  0.2 
+       g   F1*   F2*   F3*   h2   u2   p2
+A1- 0.35        0.45       0.33 0.67 0.37
+A2  0.67        0.24       0.51 0.49 0.87
+A3  0.70  0.35             0.61 0.39 0.80
+A4  0.53                   0.30 0.70 0.93
+A5  0.57  0.29             0.42 0.58 0.79
+
+With Sums of squares  of:
+   g  F1*  F2*  F3* 
+1.67 0.21 0.27 0.02 
+
+general/max  6.13   max/min =   12.47
+mean percent general =  0.75    with sd =  0.22 and cv of  0.29 
+Explained Common Variance of the general factor =  0.77 
+
+The degrees of freedom are -2  and the fit is  0 
+The number of observations was  2236  with Chi Square =  0  with prob &lt;  NA
+The root mean square of the residuals is  0 
+The df corrected root mean square of the residuals is  NA
+
+Compare this with the adequacy of just a general factor and no group factors
+The degrees of freedom for just the general factor are 5  and the fit is  0.05 
+The number of observations was  2236  with Chi Square =  101.8  with prob &lt;  2.2e-20
+The root mean square of the residuals is  0.05 
+The df corrected root mean square of the residuals is  0.07 
+
+RMSEA index =  0.093  and the 10 % confidence intervals are  0.078 0.109
+BIC =  63.24 
+
+Measures of factor score adequacy             
+                                                 g   F1*   F2*   F3*
+Correlation of scores with factors            0.84  0.43  0.52  0.15
+Multiple R square of scores with factors      0.71  0.19  0.27  0.02
+Minimum correlation of factor score estimates 0.42 -0.63 -0.46 -0.95
+
+ Total, General and Subset omega for each subset
+                                                 g  F1*  F2*  F3*
+Omega total for total scores and subscales    0.76 0.68 0.56 0.29
+Omega general for total scores and subscales  0.68 0.54 0.38 0.28
+Omega group for total scores and subscales    0.08 0.14 0.18 0.01</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb138"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb138-1"><a href="#cb138-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cortest.bartlett</span>(Data_Factorial <span class="sc">%&gt;%</span> <span class="fu">select</span>(A1, A2, A3, A4, A5))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>R was not square, finding R from data</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>$chisq
+[1] 2098.146
+
+$p.value
+[1] 0
+
+$df
+[1] 10</code></pre>
+</div>
+</div>
+</section>
+</section>
+
+</main>
+<!-- /main column -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const disableStylesheet = (stylesheets) => {
+    for (let i=0; i < stylesheets.length; i++) {
+      const stylesheet = stylesheets[i];
+      stylesheet.rel = 'prefetch';
+    }
+  }
+  const enableStylesheet = (stylesheets) => {
+    for (let i=0; i < stylesheets.length; i++) {
+      const stylesheet = stylesheets[i];
+      stylesheet.rel = 'stylesheet';
+    }
+  }
+  const manageTransitions = (selector, allowTransitions) => {
+    const els = window.document.querySelectorAll(selector);
+    for (let i=0; i < els.length; i++) {
+      const el = els[i];
+      if (allowTransitions) {
+        el.classList.remove('notransition');
+      } else {
+        el.classList.add('notransition');
+      }
+    }
+  }
+  const toggleColorMode = (alternate) => {
+    // Switch the stylesheets
+    const alternateStylesheets = window.document.querySelectorAll('link.quarto-color-scheme.quarto-color-alternate');
+    manageTransitions('#quarto-margin-sidebar .nav-link', false);
+    if (alternate) {
+      enableStylesheet(alternateStylesheets);
+      for (const sheetNode of alternateStylesheets) {
+        if (sheetNode.id === "quarto-bootstrap") {
+          toggleBodyColorMode(sheetNode);
+        }
+      }
+    } else {
+      disableStylesheet(alternateStylesheets);
+      toggleBodyColorPrimary();
+    }
+    manageTransitions('#quarto-margin-sidebar .nav-link', true);
+    // Switch the toggles
+    const toggles = window.document.querySelectorAll('.quarto-color-scheme-toggle');
+    for (let i=0; i < toggles.length; i++) {
+      const toggle = toggles[i];
+      if (toggle) {
+        if (alternate) {
+          toggle.classList.add("alternate");     
+        } else {
+          toggle.classList.remove("alternate");
+        }
+      }
+    }
+    // Hack to workaround the fact that safari doesn't
+    // properly recolor the scrollbar when toggling (#1455)
+    if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
+      manageTransitions("body", false);
+      window.scrollTo(0, 1);
+      setTimeout(() => {
+        window.scrollTo(0, 0);
+        manageTransitions("body", true);
+      }, 40);  
+    }
+  }
+  const isFileUrl = () => { 
+    return window.location.protocol === 'file:';
+  }
+  const hasAlternateSentinel = () => {  
+    let styleSentinel = getColorSchemeSentinel();
+    if (styleSentinel !== null) {
+      return styleSentinel === "alternate";
+    } else {
+      return false;
+    }
+  }
+  const setStyleSentinel = (alternate) => {
+    const value = alternate ? "alternate" : "default";
+    if (!isFileUrl()) {
+      window.localStorage.setItem("quarto-color-scheme", value);
+    } else {
+      localAlternateSentinel = value;
+    }
+  }
+  const getColorSchemeSentinel = () => {
+    if (!isFileUrl()) {
+      const storageValue = window.localStorage.getItem("quarto-color-scheme");
+      return storageValue != null ? storageValue : localAlternateSentinel;
+    } else {
+      return localAlternateSentinel;
+    }
+  }
+  let localAlternateSentinel = 'default';
+  // Dark / light mode switch
+  window.quartoToggleColorScheme = () => {
+    // Read the current dark / light value 
+    let toAlternate = !hasAlternateSentinel();
+    toggleColorMode(toAlternate);
+    setStyleSentinel(toAlternate);
+  };
+  // Ensure there is a toggle, if there isn't float one in the top right
+  if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
+    const a = window.document.createElement('a');
+    a.classList.add('top-right');
+    a.classList.add('quarto-color-scheme-toggle');
+    a.href = "";
+    a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
+    const i = window.document.createElement("i");
+    i.classList.add('bi');
+    a.appendChild(i);
+    window.document.body.appendChild(a);
+  }
+  // Switch to dark mode if need be
+  if (hasAlternateSentinel()) {
+    toggleColorMode(true);
+  } else {
+    toggleColorMode(false);
+  }
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button', {
+    text: function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+  });
+  clipboard.on('success', function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  });
+  function tippyHover(el, contentFn) {
+    const config = {
+      allowHTML: true,
+      content: contentFn,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start'
+    };
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      return note.innerHTML;
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+</div> <!-- /content -->
+
+
+
+</body></html>
