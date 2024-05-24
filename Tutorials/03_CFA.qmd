@@ -1,0 +1,408 @@
+---
+title: "Confirmatory Factor Analysis (CFA)"
+subtitle: "Tutorial"
+date: "`r Sys.Date()`"
+author: "Orlando Sabogal-Cardona"
+theme:
+  light: journal
+  dark: darkly
+format:
+  html:
+    toc: true
+    toc_levels: 3
+editor: visual
+---
+
+# Libraries and data
+
+```{r}
+library(tidyverse)
+library(magrittr)
+
+library(lavaan) #This is the primary library for CFA and SEM
+library(semPlot)
+
+library(psych) #To get access to our toy data (bfi)
+```
+
+
+# Toy data: bfi
+
+```{r}
+Test_Data <- bfi
+Test_Data[1:10,]
+```
+
+```{r}
+dim(Test_Data)
+```
+
+```{r}
+glimpse(Test_Data)
+```
+
+```{r}
+Test_Data <- drop_na(Test_Data)
+# Test_Data <- Test_Data[complete.cases(Test_Data),]
+dim(Test_Data)
+```
+
+## Content
+
+```{r}
+summary(Test_Data$A1)
+```
+
+```{r}
+Test_Data %>% group_by(A1) %>% summarise(Total = n())
+```
+
+```{r}
+Test_Data %>% group_by(A2) %>% summarise(Total = n())
+```
+
+## Scale and distribution
+
+```{r}
+Test_Data %>% select(-gender, -education, - age) %>% 
+  mutate(Temp_Id = seq(1, dim(Test_Data)[1])) %>% 
+  pivot_longer(cols = -Temp_Id, names_to = "Variable", values_to = "Score") %>% 
+  group_by(Variable, Score) %>% summarise(Total = n()) %>% 
+  pivot_wider(id_cols = Variable, names_from = Score, values_from = Total, values_fill = 0)
+```
+
+# My First CFA
+
+```{r}
+names(Test_Data)
+```
+
+
+```{r}
+MyFirstModel_Equations <- '
+  Agreeableness =~ A1 + A2 + A3 + A4 + A5
+  Conscientiousness =~ C1 + C2 + C3 + C4 + C5
+  Extraversion =~ E1 + E2 + E3 + E4 + E5  
+  Neuroticism =~ N1 + N2 + N3 + N4 + N5
+  Opennness =~ O1 + O2 + O3 + O4 + O5
+'
+```
+
+```{r}
+MyFirstModel <- sem(model = MyFirstModel_Equations, 
+                    data = Test_Data)
+```
+
+```{r}
+MyFirstModel
+```
+
+```{r}
+summary(MyFirstModel)
+```
+## Change the marker variable
+
+### First example (the "clever" way)
+
+```{r}
+Equation <- '
+  Agreeableness =~ A2 + A1 + A3 + A4 + A5
+'
+```
+
+```{r}
+Model <- sem(model = Equation, data = Test_Data)
+```
+
+```{r}
+summary(Model)
+```
+
+### Seconf example
+
+```{r}
+Equation <- '
+  Agreeableness =~ NA*A1 + 1*A2 + A3 + A4 + A5
+'
+```
+
+```{r}
+Model <- sem(model = Equation, data = Test_Data)
+```
+
+```{r}
+summary(Model)
+```
+
+
+## Standardized the mean
+
+### Just the variance
+
+```{r}
+Equation <- '
+  Agreeableness =~ A1 + A2 + A3 + A4 + A5
+'
+```
+
+```{r}
+Model <- sem(model = Equation, data = Test_Data, std.lv = TRUE)
+```
+
+```{r}
+summary(Model)
+```
+
+"Two extra columns of standardized parameter values are printed. In the first column (labeled Std.lv), only the latent variables are standardized. In the second column (labeled Std.all), both latent and observed variables are standardized. The latter is often called the ‘completely standardized solution’." sourece: lavaan documentation
+
+### All in one
+
+**You SHOULD always do this**
+
+```{r}
+Equation <- '
+  Agreeableness =~ A1 + A2 + A3 + A4 + A5
+'
+```
+
+```{r}
+Model <- sem(model = Equation, data = Test_Data)
+```
+
+```{r}
+summary(Model, standardized = TRUE)
+```
+
+## Communalities
+
+### The easy way
+
+```{r}
+summary(Model, standardized = TRUE, rsquare = TRUE)
+```
+### The other way
+
+```{r}
+standardized_results <- standardizedSolution(Model)
+```
+
+```{r}
+standardized_results
+```
+
+
+```{r}
+Loadings <- standardized_results %>% filter(op == "=~")
+Loadings
+```
+
+```{r}
+Loadings$est.std*Loadings$est.std
+```
+
+```{r}
+FactorModel <- data.frame(Indicators = Loadings$lhs, 
+                          Commun = Loadings$est.std*Loadings$est.std) %>% 
+  mutate(Uniq = 1 - Commun)
+
+FactorModel
+```
+
+
+## Model Fit
+
+### One way
+
+```{r}
+summary(Model, standardized = TRUE, rsquare = TRUE,  fit.measures = TRUE)
+```
+
+### The better way
+
+```{r}
+GoF = c("srmr", "rmsea", "tli", "cfi", "gfi", "agfi", "wrmr") 
+fitmeasures(Model, fit.measures = GoF)
+```
+
+```{r}
+fitmeasures(Model, fit.measures = "all")
+```
+
+## Model Fit: residual correlation matrix
+
+```{r}
+lavInspect(Model)
+```
+
+```{r}
+fitted(Model)
+```
+```{r}
+resid(Model)
+```
+
+
+## Correlate errors
+
+```{r}
+Equation <- '
+  Agreeableness =~ A1 + A2 + A3 + A4 + A5
+  A1 ~~ A2
+'
+```
+
+```{r}
+Model <- sem(model = Equation, data = Test_Data)
+```
+
+```{r}
+summary(Model, standardized = TRUE, rsquare = TRUE,  fit.measures = TRUE)
+```
+
+## Modification Indices
+
+```{r}
+mod_indices <- modindices(Model)
+```
+
+```{r}
+mod_indices
+```
+
+
+## Estimation method
+
+```{r}
+Equation <- '
+  Agreeableness =~ A1 + A2 + A3 + A4 + A5
+'
+```
+
+```{r}
+Model <- sem(model = Equation, data = Test_Data, 
+             estimator = "DWLS")
+```
+
+```{r}
+summary(Model)
+```
+
+```{r}
+Model <- sem(model = Equation, data = Test_Data, 
+             ordered = c("A1"))
+```
+
+```{r}
+summary(Model)
+```
+
+## Plots
+
+```{r}
+Equation <- '
+  Agreeableness =~ A1 + A2 + A3 + A4 + A5
+  A1 ~~ A2
+'
+```
+
+```{r}
+Model <- sem(model = Equation, data = Test_Data)
+```
+
+```{r}
+semPaths(Model)
+```
+
+```{r}
+semPaths(Model, "std")
+```
+
+```{r}
+semPaths(Model)
+```
+```{r}
+semPaths(Model, what = "std", whatLabels = "hide")
+```
+
+```{r}
+semPaths(Model, "std", weighted = FALSE, nCharNodes = 7, shapeMan = "rectangle",
+         sizeMan = 8, sizeMan2 = 5)
+```
+
+## Factor scores
+
+```{r}
+CFA_Scores <- lavPredict(Model, method = "Bartlett")
+CFA_Scores <- as.data.frame(CFA_Scores)
+head(CFA_Scores)
+```
+
+
+# Second CFA
+
+```{r}
+Model_Equations <- '
+  Agreeableness =~ A1 + A2 + A3 + A4 + A5
+  Conscientiousness =~ C1 + C2 + C3 + C4 + C5
+  Extraversion =~ E1 + E2 + E3 + E4 + E5  
+  Neuroticism =~ N1 + N2 + N3 + N4 + N5
+  Opennness =~ O1 + O2 + O3 + O4 + O5
+'
+```
+
+```{r}
+Model <- sem(model = Model_Equations, 
+                    data = Test_Data)
+```
+
+```{r}
+summary(Model, standardized = TRUE, rsquare = TRUE,  fit.measures = TRUE)
+```
+
+```{r}
+semPaths(Model, what = "std", whatLabels = "hide")
+```
+
+# Third CFA
+
+```{r}
+Model_Equations <- '
+  Agreeableness =~ A1 + A2 + A3 + A4 + A5
+  Conscientiousness =~ C1 + C2 + C3 + C4 + C5
+  Extraversion =~ E1 + E2 + E3 + E4 + E5  
+  Neuroticism =~ N1 + N2 + N3 + N4 + N5
+  Opennness =~ O1 + O2 + O3 + O4 + O5
+  
+  SuperLatent =~ Agreeableness + Conscientiousness +  Extraversion +  Neuroticism +  Opennness
+'
+```
+
+```{r}
+Model <- sem(model = Model_Equations, 
+                    data = Test_Data)
+```
+
+```{r}
+summary(Model, standardized = TRUE, rsquare = TRUE,  fit.measures = TRUE)
+```
+
+# Fourth CFA: Your turn
+
+```{r}
+data(HolzingerSwineford1939)
+```
+
+```{r}
+head(HolzingerSwineford1939)
+```
+
+
+# Final exampe: Your turn
+
+```{r}
+data(PoliticalDemocracy)
+```
+
+```{r}
+head(PoliticalDemocracy)
+```
